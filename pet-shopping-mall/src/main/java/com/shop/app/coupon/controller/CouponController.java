@@ -26,7 +26,7 @@ public class CouponController {
 	private CouponService couponService;
 
    /**
-    * @author 전예라,
+    * @author 전예라
     * 쿠폰 전체 내역 조회
     */
 	@GetMapping("/couponList.do")
