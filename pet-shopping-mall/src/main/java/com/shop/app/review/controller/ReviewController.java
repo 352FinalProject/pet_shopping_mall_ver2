@@ -44,6 +44,7 @@ import com.shop.app.order.entity.Order;
 import com.shop.app.member.entity.MemberDetails;
 import com.shop.app.notification.entity.Notification;
 import com.shop.app.notification.repository.NotificationRepository;
+import com.shop.app.notification.service.NotificationServiceImpl;
 import com.shop.app.order.dto.OrderHistoryDto;
 import com.shop.app.order.service.OrderService;
 import com.shop.app.payment.entity.Payment;
@@ -94,7 +95,8 @@ public class ReviewController {
 	private ServletContext application;
 
 	@Autowired
-	NotificationRepository notificationRepository;
+	NotificationServiceImpl notificationServiceImpl;
+	
 	
 	@Autowired
 	SimpMessagingTemplate simpMessagingTemplate;
@@ -260,18 +262,8 @@ public class ReviewController {
 
 		int newPointResult = pointService.insertPoint(newPoint);
 		
-		String to = newPoint.getPointMemberId();
-		Notification insertNotification = Notification.builder()
-				.notiCategory(3)
-				.notiContent("리뷰 작성 포인트가 적립되었습니다.")
-				.notiCreatedAt(formatTimestampNow())
-				.memberId(to) 
-				.build();
+		int reviewCreateNotification = notificationServiceImpl.reviewCreateNotification(newPoint);
 		
-		notificationRepository.insertNotification(insertNotification);
-		Notification notification = notificationRepository.latestNotification();
-		simpMessagingTemplate.convertAndSend("/pet/notice/" + to, notification);
-
 		return "redirect:/review/reviewList.do";
 	}
 

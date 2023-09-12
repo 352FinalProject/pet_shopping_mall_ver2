@@ -9,11 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.shop.app.coupon.entity.MemberCoupon;
 import com.shop.app.notification.entity.Notification;
 import com.shop.app.notification.repository.NotificationRepository;
 import com.shop.app.order.entity.Order;
 import com.shop.app.order.repository.OrderRepository;
 import com.shop.app.payment.dto.PaymentCompleteNotificationDto;
+import com.shop.app.point.entity.Point;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
@@ -55,6 +57,48 @@ public class NotificationServiceImpl implements NotificationService {
 			// 메세지 보냄
 			simpMessagingTemplate.convertAndSend("/pet/notice/" + to, notification);
 		}
+		return result;
+	}
+	
+	/**
+    * @author 김대원
+    * 리팩토링 회원가입 쿠폰발급 알림 
+    */
+	public int memberCreateNotification(MemberCoupon memberCoupon) {
+		int result = 0;
+		String to = memberCoupon.getMemberId();
+		Notification insertNotification = Notification.builder()
+				.notiCategory(3)
+				.notiContent("회원가입 배송비 할인 쿠폰이 발급됐습니다.")
+				.notiCreatedAt(formatTimestampNow())
+				.memberId(to) 
+				.build();
+		
+		result = notificationRepository.insertNotification(insertNotification);
+		Notification notification = notificationRepository.latestNotification();
+		simpMessagingTemplate.convertAndSend("/pet/notice/" + to, notification);
+		
+		return result;
+	}
+	
+	/**
+    * @author 김대원
+    * 리팩토링 회원가입 쿠폰발급 알림 
+    */
+	public int reviewCreateNotification(Point newPoint) {
+		int result = 0;
+		String to = newPoint.getPointMemberId();
+		Notification insertNotification = Notification.builder()
+				.notiCategory(3)
+				.notiContent("리뷰 작성 포인트가 적립되었습니다.")
+				.notiCreatedAt(formatTimestampNow())
+				.memberId(to) 
+				.build();
+		
+		notificationRepository.insertNotification(insertNotification);
+		Notification notification = notificationRepository.latestNotification();
+		simpMessagingTemplate.convertAndSend("/pet/notice/" + to, notification);
+		
 		return result;
 	}
 	
