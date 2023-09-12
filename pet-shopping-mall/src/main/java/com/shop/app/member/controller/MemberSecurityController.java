@@ -333,6 +333,7 @@ public class MemberSecurityController {
    }
    
    /**
+    * @author 김담희
     * 멤버 구독자 업데이트 메소드
     */
    @PostMapping("/subscribe.do")
