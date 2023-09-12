@@ -16,6 +16,7 @@ import com.shop.app.order.entity.Order;
 import com.shop.app.order.repository.OrderRepository;
 import com.shop.app.payment.dto.PaymentCompleteNotificationDto;
 import com.shop.app.point.entity.Point;
+import com.shop.app.servicecenter.inquiry.entity.Question;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
@@ -83,7 +84,7 @@ public class NotificationServiceImpl implements NotificationService {
 	
 	/**
     * @author 김대원
-    * 리팩토링 회원가입 쿠폰발급 알림 
+    * 리팩토링 리뷰 적립금 알림
     */
 	public int reviewCreateNotification(Point newPoint) {
 		int result = 0;
@@ -91,6 +92,27 @@ public class NotificationServiceImpl implements NotificationService {
 		Notification insertNotification = Notification.builder()
 				.notiCategory(3)
 				.notiContent("리뷰 작성 포인트가 적립되었습니다.")
+				.notiCreatedAt(formatTimestampNow())
+				.memberId(to) 
+				.build();
+		
+		notificationRepository.insertNotification(insertNotification);
+		Notification notification = notificationRepository.latestNotification();
+		simpMessagingTemplate.convertAndSend("/pet/notice/" + to, notification);
+		
+		return result;
+	}
+	
+	/**
+    * @author 김대원
+    * 리팩토링 질문답변글 알림
+    */
+	public int adminAnswerCreateNotification(Question questions) {
+		int result = 0;
+		String to = questions.getQuestionMemberId();
+		Notification insertNotification = Notification.builder()
+				.notiCategory(3)
+				.notiContent(questions.getQuestionTitle()+ " 질문에 답변이 달렸습니다.")
 				.notiCreatedAt(formatTimestampNow())
 				.memberId(to) 
 				.build();

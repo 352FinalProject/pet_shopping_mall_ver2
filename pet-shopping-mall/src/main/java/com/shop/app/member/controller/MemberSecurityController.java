@@ -153,7 +153,7 @@ public class MemberSecurityController {
 	       int memberInsertCoupon = couponService.insertDeliveryCoupon(memberCoupon);
 	       
 	       // 리팩토링 김대원(회원가입 쿠폰 알림)
-	       int memberCreateNotification = notificationServiceImpl.memberCreateNotification(memberCoupon);
+	       notificationServiceImpl.memberCreateNotification(memberCoupon);
        }
       
        Object obj = session.getAttribute("userAgreements");

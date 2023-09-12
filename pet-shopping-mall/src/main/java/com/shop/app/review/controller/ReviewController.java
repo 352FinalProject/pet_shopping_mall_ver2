@@ -262,7 +262,8 @@ public class ReviewController {
 
 		int newPointResult = pointService.insertPoint(newPoint);
 		
-		int reviewCreateNotification = notificationServiceImpl.reviewCreateNotification(newPoint);
+		// 리팩토링 김대원(리뷰 적립금 알림)
+		notificationServiceImpl.reviewCreateNotification(newPoint);
 		
 		return "redirect:/review/reviewList.do";
 	}
