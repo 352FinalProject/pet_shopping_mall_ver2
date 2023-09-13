@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.shop.app.coupon.entity.MemberCoupon;
 import com.shop.app.coupon.repository.CouponRepository;
+import com.shop.app.coupon.service.CouponService;
 import com.shop.app.member.entity.Member;
 import com.shop.app.member.entity.Subscribe;
 import com.shop.app.member.repository.MemberRepository;
@@ -30,6 +31,7 @@ import com.shop.app.payment.entity.Payment;
 import com.shop.app.payment.repository.PaymentRepository;
 import com.shop.app.point.entity.Point;
 import com.shop.app.point.repository.PointRepository;
+import com.shop.app.point.service.PointService;
 
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -47,10 +49,10 @@ public class OrderServiceImpl implements OrderService {
 	private OrderRepository orderRepository;
 	
 	@Autowired
-	private PointRepository pointRepository;
+	private PointService pointService;
 	
 	@Autowired
-	private CouponRepository couponRepository;
+	private CouponService couponService;
 	
 	@Autowired
 	private MemberRepository memberRepository;
@@ -83,10 +85,10 @@ public class OrderServiceImpl implements OrderService {
 	        
 	    	Point points = new Point();
 			points.setPointMemberId(memberId);
-	        Point currentPoints = pointRepository.findPointCurrentById(points);
+	        Point currentPoints = pointService.findPointCurrentById(points);
 	        usedPoint.setPointCurrent(currentPoints.getPointCurrent() - pointsUsed);
 	        
-	        pointRepository.insertUsedPoint(usedPoint);
+	        pointService.insertUsedPoint(usedPoint);
 	    }
 
 	    // 쿠폰 사용 처리
@@ -96,7 +98,7 @@ public class OrderServiceImpl implements OrderService {
 	        coupon.setCouponId(couponId);
 	        coupon.setUseStatus(1);
 	        
-	        couponRepository.updateCouponStatus(coupon);
+	        couponService.updateCouponStatus(coupon);
 	    }
 
 	    // 포인트 적립 처리 (포인트를 사용한 경우에는 적립하지 않음)
@@ -113,10 +115,10 @@ public class OrderServiceImpl implements OrderService {
 	        point.setPointType("구매적립");
 	        point.setPointAmount(pointAmount);
 
-	        Point currentPoints = pointRepository.findReviewPointCurrentById(point);
+	        Point currentPoints = pointService.findReviewPointCurrentById(point);
 	        point.setPointCurrent(currentPoints.getPointCurrent() + pointAmount);
 
-	        pointRepository.insertPoint(point);
+	        pointService.insertPoint(point);
 	    }
 
 	    return result;
@@ -254,13 +256,13 @@ public class OrderServiceImpl implements OrderService {
             rollbackPoint.setPointType("구매취소");
             rollbackPoint.setPointAmount(pointsUsed);
 
-            Point currentPoints = pointRepository.findPointCurrentById(rollbackPoint);
+            Point currentPoints = pointService.findPointCurrentById(rollbackPoint);
             int currentPoint = currentPoints.getPointCurrent();
             int earnedPoint = currentPoints.getPointAmount();
             int netPoint = currentPoint - earnedPoint;
             rollbackPoint.setPointCurrent(netPoint);
             
-            pointRepository.insertRollbackPoint(rollbackPoint);
+            pointService.insertRollbackPoint(rollbackPoint);
         }
 
         // 쿠폰 롤백
@@ -271,7 +273,7 @@ public class OrderServiceImpl implements OrderService {
             coupon.setUseStatus(0);
             coupon.setUseDate(null);
 
-            couponRepository.updateCoupon(coupon);
+            couponService.updateCoupon(coupon);
         }
 
         return result;

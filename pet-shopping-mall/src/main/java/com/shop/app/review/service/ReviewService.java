@@ -82,6 +82,8 @@ public interface ReviewService {
 
 	ReviewDetails createReview(@Valid ReviewCreateDto _review, List<ImageAttachment> attachments, Pet pet);
 
+	void deleteReviewAndRollbackPoints(int reviewId);
+
 
 
 

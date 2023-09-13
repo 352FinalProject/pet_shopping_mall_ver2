@@ -250,31 +250,12 @@ public class ReviewController {
 	 * 리뷰 삭제
 	 * 
 	 * @author 전예라
-	 * 리뷰 삭제 시 적립된 포인트 반환
+	 * 리뷰 삭제 시 적립된 포인트 반환 (리팩토링)
 	 */
 	@PostMapping("/reviewDelete.do")
 	public String reviewDelete(@RequestParam int reviewId) {
-
-		Point earnedPoint = pointService.getPointByReviewId(reviewId);
-
-		if (earnedPoint != null) {
-			Point currentPoints = pointService.findReviewPointCurrentById(earnedPoint); 
-			int updatedPointAmount = currentPoints.getPointCurrent() - earnedPoint.getPointAmount();
-
-			Point rollbackPoint = new Point();
-			rollbackPoint.setPointCurrent(updatedPointAmount);
-			rollbackPoint.setPointAmount(-earnedPoint.getPointAmount());
-			rollbackPoint.setPointType("리뷰삭제");
-			rollbackPoint.setPointMemberId(earnedPoint.getPointMemberId());
-			rollbackPoint.setReviewId(reviewId);
-
-			int rollbackResult = pointService.insertRollbackPoint(rollbackPoint);
-		}
-
-		// 리뷰 삭제
-		int result = reviewService.reviewDelete(reviewId);
-
-		return "redirect:/review/reviewList.do";
+	    reviewService.deleteReviewAndRollbackPoints(reviewId);
+	    return "redirect:/review/reviewList.do";
 	}
 
 

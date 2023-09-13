@@ -14,6 +14,9 @@ import com.shop.app.order.service.OrderService;
 import com.shop.app.pet.entity.Pet;
 import com.shop.app.pet.repository.PetRepository;
 import com.shop.app.pet.service.PetService;
+import com.shop.app.point.entity.Point;
+import com.shop.app.point.repository.PointRepository;
+import com.shop.app.point.service.PointService;
 import com.shop.app.product.dto.ProductInfoDto;
 import com.shop.app.product.entity.Product;
 import com.shop.app.product.repository.ProductRepository;
@@ -50,6 +53,9 @@ public class ReviewServiceImpl implements ReviewService {
 	
 	@Autowired
 	private OrderRepository orderRepository;
+	
+	@Autowired
+	private PointService pointService;
 	
 	
 	// 리뷰 추가 db저장
@@ -253,6 +259,33 @@ public class ReviewServiceImpl implements ReviewService {
 	public ReviewDetails findProductImageAttachmentsByReviewId2(int reviewId2, int orderId) {
 		return reviewRepository.findProductImageAttachmentsByReviewId2(reviewId2, orderId);
 	}
+
+	
+    /**
+     * @author 전예라
+     * 리뷰 삭제 시 적립된 포인트 반환 (리팩토링)
+     */
+    @Override
+    public void deleteReviewAndRollbackPoints(int reviewId) {
+        Point earnedPoint = pointService.getPointByReviewId(reviewId);
+
+        if (earnedPoint != null) {
+            Point currentPoints = pointService.findReviewPointCurrentById(earnedPoint); 
+            int updatedPointAmount = currentPoints.getPointCurrent() - earnedPoint.getPointAmount();
+
+            Point rollbackPoint = new Point();
+            rollbackPoint.setPointCurrent(updatedPointAmount);
+            rollbackPoint.setPointAmount(-earnedPoint.getPointAmount());
+            rollbackPoint.setPointType("리뷰삭제");
+            rollbackPoint.setPointMemberId(earnedPoint.getPointMemberId());
+            rollbackPoint.setReviewId(reviewId);
+
+            int rollbackResult = pointService.insertRollbackPoint(rollbackPoint);
+        }
+
+        // 리뷰 삭제
+        int result = this.reviewDelete(reviewId);
+    }
 
 
 }
