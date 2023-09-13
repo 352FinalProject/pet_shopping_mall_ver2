@@ -44,6 +44,7 @@ import com.shop.app.order.entity.Order;
 import com.shop.app.member.entity.MemberDetails;
 import com.shop.app.notification.entity.Notification;
 import com.shop.app.notification.repository.NotificationRepository;
+import com.shop.app.notification.service.NotificationServiceImpl;
 import com.shop.app.order.dto.OrderHistoryDto;
 import com.shop.app.order.service.OrderService;
 import com.shop.app.payment.entity.Payment;
@@ -95,6 +96,7 @@ public class ReviewController {
 
 	@Autowired
 	NotificationRepository notificationRepository;
+	NotificationServiceImpl notificationServiceImpl;
 	
 	@Autowired
 	SimpMessagingTemplate simpMessagingTemplate;
@@ -205,39 +207,16 @@ public class ReviewController {
 			}
 		}
 		
-		// 2. db저장
-		ReviewDetails reviews = ReviewDetails.builder()
-				.reviewId(_review.getReviewId())
-				.petId(pet.getPetId())
-				.orderId(_review.getOrderId())
-				.productId(_review.getProductId())
-				.productDetailId(_review.getProductDetailId())
-				.reviewMemberId(_review.getReviewMemberId())
-				.reviewStarRate(_review.getReviewStarRate())
-				.reviewTitle(_review.getReviewTitle())
-				.reviewContent(_review.getReviewContent())
-				.attachments(attachments)
-				.build();
-		
-		// petId 연결하기
-		// petId 로그인 멤버 말고 리뷰작성자랑 연결하기
-		String memberId = _review.getReviewMemberId();
-		List<Pet> petInfo = petService.findPetsByMemberId(memberId); // 리뷰작성자의 펫정보 가져오기
-		
-		if (!petInfo.isEmpty()) { // 펫정보가 비어있지 않다면
-			Pet firstPet = petInfo.get(0); // 첫번째 Pet 객체 가져오기
-			reviews.setPetId(firstPet.getPetId()); // db에 pet정보 저장
-		} else {
-			reviews.setPetId(null);
-		}
-			
+		// 리뷰내용, 사진, 펫정보 db저장	
+		Review review = reviewService.createReview(_review, attachments, pet);
 	
-		int reviewId = reviewService.insertReview(reviews);
-		int orderId = reviews.getOrderId();
-		int productDetailId = reviews.getProductDetailId();
-		String reviewMemberId = reviews.getReviewMemberId();
+		int reviewId = reviewService.insertReview(review);
 		
-		ReviewDetailDto pointReviewId = reviewService.findReviewId(reviews.getReviewId());
+//		int orderId = reviews.getOrderId();
+//		int productDetailId = reviews.getProductDetailId();
+//		String reviewMemberId = reviews.getReviewMemberId();
+		
+		ReviewDetailDto pointReviewId = reviewService.findReviewId(review.getReviewId());
 
 		point.setPointMemberId(_review.getReviewMemberId());
 		point.setReviewId(_review.getReviewId());

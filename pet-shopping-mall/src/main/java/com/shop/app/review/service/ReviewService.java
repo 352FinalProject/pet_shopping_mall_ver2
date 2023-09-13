@@ -3,8 +3,13 @@ package com.shop.app.review.service;
 import java.util.List;
 import java.util.Map;
 
+import javax.validation.Valid;
+
+import com.shop.app.common.entity.ImageAttachment;
+import com.shop.app.pet.entity.Pet;
 import com.shop.app.product.dto.ProductInfoDto;
 import com.shop.app.review.dto.ProductReviewAvgDto;
+import com.shop.app.review.dto.ReviewCreateDto;
 import com.shop.app.review.dto.ReviewDetailDto;
 import com.shop.app.review.dto.ReviewListDto;
 import com.shop.app.review.dto.ReviewProductDto;
@@ -74,6 +79,8 @@ public interface ReviewService {
 
 	ReviewDetails findProductImageAttachmentsByReviewId2(int reviewId2, int orderId);
 //	ReviewDetails findProductImageAttachmentsByReviewId2(int reviewId2);
+
+	ReviewDetails createReview(@Valid ReviewCreateDto _review, List<ImageAttachment> attachments, Pet pet);
 
 
 
