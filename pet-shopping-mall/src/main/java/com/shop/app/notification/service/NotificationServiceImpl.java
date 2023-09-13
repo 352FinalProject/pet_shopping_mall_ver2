@@ -96,7 +96,7 @@ public class NotificationServiceImpl implements NotificationService {
 				.memberId(to) 
 				.build();
 		
-		notificationRepository.insertNotification(insertNotification);
+		result = notificationRepository.insertNotification(insertNotification);
 		Notification notification = notificationRepository.latestNotification();
 		simpMessagingTemplate.convertAndSend("/pet/notice/" + to, notification);
 		

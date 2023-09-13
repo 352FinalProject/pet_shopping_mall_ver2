@@ -194,8 +194,6 @@ public class AdminController {
 	/**
 	 *  관리자 1:1 문의 제목, 내용 검색
 	 * @author 전예라
-	 * @param searchKeyword
-	 * @param model
 	 * @return
 	 */
 	@GetMapping("/adminQuestionSearch.do")

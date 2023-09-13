@@ -149,7 +149,7 @@ public class OrderController {
 	 * 주문을 진행 중 사용자의 취소 시 주문 내역 테이블 자체에서 삭제
 
 	 * @author 전예라
-	 * 결제창이 넘어가기 전에 취소하면 사용했던 포인트, 쿠폰 롤백
+	 * 결제창이 넘어가기 전에 취소하면 사용했던 포인트, 쿠폰 롤백 (리팩토링)
 	 */
 	@PostMapping("/deleteOrder.do")
 	public String deleteOrder(@RequestParam String orderNo, RedirectAttributes redirectAttr, @AuthenticationPrincipal Member member, 
@@ -159,36 +159,9 @@ public class OrderController {
 		
 		if (member != null) {
 			String memberId = member.getMemberId();
-			int result = orderService.deleteOrder(orderNo);
-		
-		if (pointsUsed != null) {
-		    Point rollbackPoint = new Point();
-		    rollbackPoint.setPointMemberId(memberId);
-		    rollbackPoint.setPointType("구매취소");
-		    rollbackPoint.setPointAmount(pointsUsed);
-	
-		    Point currentPoints = pointService.findPointCurrentById(rollbackPoint);
-	
-		    int currentPoint = currentPoints.getPointCurrent();
-		    int earnedPoint = currentPoints.getPointAmount();
-		    int netPoint = currentPoint - earnedPoint;
-		    rollbackPoint.setPointCurrent(netPoint);
-		    
-		    int pointRollback = pointService.insertRollbackPoint(rollbackPoint);
-		}
-			
-		if (useCoupon != null && !useCoupon.isEmpty() && couponId != null) {
-	    MemberCoupon coupon = new MemberCoupon();
-	    	coupon.setCouponId(couponId);
-	    	coupon.setMemberId(memberId);
-	        coupon.setUseStatus(0);
-	        coupon.setUseDate(null);
-	        
-	        int updateCoupon = couponService.updateCoupon(coupon); 
-	    	}
+			int result = orderService.deleteOrder(orderNo, memberId, pointsUsed, couponId);
 		}
 		return "redirect:/cart/shoppingCart.do";
-		
 	}
 	
 	/**

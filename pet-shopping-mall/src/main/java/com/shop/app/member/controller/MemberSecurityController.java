@@ -102,91 +102,52 @@ public class MemberSecurityController {
     * 회원가입 (비밀번호 암호화 처리)
     * 
     * @author 전예라
-    * 이메일 인증 api, 회원가입 포인트 지급, 회원가입 쿠폰 발급, 이용약관 처리
+    * 이메일 인증 api, 회원가입 포인트 지급, 회원가입 쿠폰 발급, 이용약관 처리 (리팩토링)
     * 
-    * @author 김대원
-    * 회원가입 쿠폰이 발급되면 회원에게 알림 발송
     */
    @PostMapping("/memberCreate.do")
    public String memberCreate(@Valid MemberCreateDto member, BindingResult bindingResult,
          RedirectAttributes redirectAttr, HttpSession session) {
+	    
+	   HashMap<Integer, Accept> userAgreements = fetchUserAgreements(session);
+	   member.setUserAgreements(userAgreements);
+	   
+       Boolean isVerified = (Boolean) session.getAttribute("emailVerified");
 
-      Boolean isVerified = (Boolean) session.getAttribute("emailVerified");
-      if (isVerified == null || !isVerified) {
-         redirectAttr.addFlashAttribute("msg", "이메일 인증을 해주세요.");
-         return "redirect:/member/memberCreate.do";
-      }
-
-      if (bindingResult.hasErrors()) {
-         ObjectError error = bindingResult.getAllErrors().get(0);
-         redirectAttr.addFlashAttribute("msg", error.getDefaultMessage());
-         return "redirect:/member/memberCreate.do";
-      }
-
-      String rawPassword = member.getPassword();
-      String encodedPassword = passwordEncoder.encode(rawPassword);
-      member.setPassword(encodedPassword);
-
-      int result = memberService.insertMember(member);
-
-      Point point = new Point();
-      point.setPointMemberId(member.getMemberId());
-      point.setPointCurrent(3000);
-      point.setPointType("회원가입");
-      point.setPointAmount(3000);
-      
-      int resultPoint = pointService.insertPoint(point);
-      
-	   List<Coupon> resultCoupon = couponService.findCoupon();
-	   for (Coupon coupon : resultCoupon) {
-	       MemberCoupon memberCoupon = new MemberCoupon();
-	       memberCoupon.setCouponId(coupon.getCouponId());
-	       memberCoupon.setMemberId(member.getMemberId());
-	
-	       LocalDateTime issuanceDate = LocalDateTime.now();
-	       LocalDateTime endDate = issuanceDate.plusMonths(1);
-	       
-	       memberCoupon.setCreateDate(issuanceDate); 
-	       memberCoupon.setEndDate(endDate); 
-	       memberCoupon.setUseStatus(0);
-	
-	       int memberInsertCoupon = couponService.insertDeliveryCoupon(memberCoupon);
-	       
-	       // 리팩토링 김대원(회원가입 쿠폰 알림)
-	       notificationServiceImpl.memberCreateNotification(memberCoupon);
+       if (isVerified == null || !isVerified) {
+           redirectAttr.addFlashAttribute("msg", "이메일 인증을 해주세요.");
+           return "redirect:/member/memberCreate.do";
        }
-      
-       Object obj = session.getAttribute("userAgreements");
-       Terms terms = new Terms();
 
-      if (obj instanceof HashMap) {
-         HashMap<Integer, Accept> userAgreements = (HashMap<Integer, Accept>) obj;
+       if (bindingResult.hasErrors()) {
+           ObjectError error = bindingResult.getAllErrors().get(0);
+           redirectAttr.addFlashAttribute("msg", error.getDefaultMessage());
+           return "redirect:/member/memberCreate.do";
+       }
 
-         terms.setMemberId(member.getMemberId());
-
-         List<TermsHistory> findTermsHistory = termsService.fineTermsHistory();
-
-
-         for (TermsHistory th : findTermsHistory) {
-            terms.setHistoryId(th.getTermsId());
-            terms.setTermsId(th.getTermsId());
-            terms.setAccept(userAgreements.getOrDefault(th.getTermsId(), Accept.N));
-
-            int result2 = termsService.insertTerms(terms);
-         }
-
-         session.removeAttribute("terms");
-
-      } else {
-         redirectAttr.addFlashAttribute("msg", "약관에 동의해주세요.");
-         return "redirect:/member/terms.do";
-      }
-      session.removeAttribute("emailVerified");
-
-      return "redirect:/member/memberCreateComplete.do";
+       String rawPassword = member.getPassword();
+       String encodedPassword = passwordEncoder.encode(rawPassword);
+       member.setPassword(encodedPassword);
+       
+       int memberId = memberService.createMember(member);
+       
+       if (memberId > 0) {
+           session.removeAttribute("emailVerified");
+           return "redirect:/member/memberCreateComplete.do";
+       } else {
+           return "redirect:/member/memberCreate.do";
+       }
    }
    
-   /**
+	public HashMap<Integer, Accept> fetchUserAgreements(HttpSession session) {
+	    Object obj = session.getAttribute("userAgreements");
+	    if (obj instanceof HashMap) {
+	        return (HashMap<Integer, Accept>) obj;
+	    }
+	    return new HashMap<>();
+	}
+
+	/**
     * @author 전예라
     * 회원이 체크한 Y/N을 임시 세션에 저장
     */

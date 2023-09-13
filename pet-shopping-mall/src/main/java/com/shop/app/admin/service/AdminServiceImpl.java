@@ -127,8 +127,5 @@ public class AdminServiceImpl implements AdminService {
 	public int updateMemberPoints(String memberId, int pointChange) {
 		return adminRepository.updateMemberPoints(memberId, pointChange);
 	}
-	
-
-	
 
 }

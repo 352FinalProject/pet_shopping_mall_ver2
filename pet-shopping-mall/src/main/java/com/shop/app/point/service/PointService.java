@@ -3,8 +3,11 @@ package com.shop.app.point.service;
 import java.util.List;
 import java.util.Map;
 
+import javax.validation.Valid;
+
 import com.shop.app.order.entity.OrderDetail;
 import com.shop.app.point.entity.Point;
+import com.shop.app.review.dto.ReviewCreateDto;
 import com.shop.app.review.entity.ReviewDetails;
 
 public interface PointService	 {
@@ -28,6 +31,8 @@ public interface PointService	 {
 	List<Point> findRollbackPointCurrentById(Point rollbackPoint);
 
 	int findTotalPointCount(String pointMemberId);
+
+	void handleReviewPoints(@Valid ReviewCreateDto _review, boolean hasImage);
 
 	
 }
