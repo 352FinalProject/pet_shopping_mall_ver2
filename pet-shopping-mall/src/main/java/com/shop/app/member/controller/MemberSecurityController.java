@@ -46,6 +46,7 @@ import com.shop.app.member.entity.TermsHistory;
 import com.shop.app.member.service.MemberService;
 import com.shop.app.notification.entity.Notification;
 import com.shop.app.notification.repository.NotificationRepository;
+import com.shop.app.notification.service.NotificationServiceImpl;
 import com.shop.app.order.service.OrderService;
 import com.shop.app.payment.dto.SubScheduleDto;
 import com.shop.app.point.entity.Point;
@@ -81,7 +82,7 @@ public class MemberSecurityController {
    private OrderService orderService;
 
    @Autowired
-	NotificationRepository notificationRepository; // 알림 레파
+   NotificationServiceImpl notificationServiceImpl; // 알림 임플
 	
 	@Autowired
 	SimpMessagingTemplate simpMessagingTemplate; // 알림
@@ -136,33 +137,23 @@ public class MemberSecurityController {
       
       int resultPoint = pointService.insertPoint(point);
       
-       List<Coupon> resultCoupon = couponService.findCoupon();
-       for (Coupon coupon : resultCoupon) {
-           MemberCoupon memberCoupon = new MemberCoupon();
-           memberCoupon.setCouponId(coupon.getCouponId());
-           memberCoupon.setMemberId(member.getMemberId());
-
-           LocalDateTime issuanceDate = LocalDateTime.now();
-           LocalDateTime endDate = issuanceDate.plusMonths(1);
-           
-           memberCoupon.setCreateDate(issuanceDate); 
-           memberCoupon.setEndDate(endDate); 
-           memberCoupon.setUseStatus(0);
-
-           int memberInsertCoupon = couponService.insertDeliveryCoupon(memberCoupon);
-           
-           String to = memberCoupon.getMemberId();
-			Notification insertNotification = Notification.builder()
-					.notiCategory(3)
-					.notiContent("회원가입 배송비 할인 쿠폰이 발급됐습니다.")
-					.notiCreatedAt(formatTimestampNow())
-					.memberId(to) 
-					.build();
-			
-			notificationRepository.insertNotification(insertNotification);
-			Notification notification = notificationRepository.latestNotification();
-			simpMessagingTemplate.convertAndSend("/pet/notice/" + to, notification);
-           
+	   List<Coupon> resultCoupon = couponService.findCoupon();
+	   for (Coupon coupon : resultCoupon) {
+	       MemberCoupon memberCoupon = new MemberCoupon();
+	       memberCoupon.setCouponId(coupon.getCouponId());
+	       memberCoupon.setMemberId(member.getMemberId());
+	
+	       LocalDateTime issuanceDate = LocalDateTime.now();
+	       LocalDateTime endDate = issuanceDate.plusMonths(1);
+	       
+	       memberCoupon.setCreateDate(issuanceDate); 
+	       memberCoupon.setEndDate(endDate); 
+	       memberCoupon.setUseStatus(0);
+	
+	       int memberInsertCoupon = couponService.insertDeliveryCoupon(memberCoupon);
+	       
+	       // 리팩토링 김대원(회원가입 쿠폰 알림)
+	       notificationServiceImpl.memberCreateNotification(memberCoupon);
        }
       
        Object obj = session.getAttribute("userAgreements");
@@ -341,17 +332,8 @@ public class MemberSecurityController {
    public void petUpdate() {
    }
    
-   // 알림 날짜변환메소드 (대원)
-   private String formatTimestamp(Timestamp timestamp) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
-        return dateFormat.format(timestamp);
-	}
-	// 알림 날짜변환메소드 (대원)
-	private String formatTimestampNow() {
-	    return formatTimestamp(new Timestamp(System.currentTimeMillis()));
-	}
-   
    /**
+    * @author 김담희
     * 멤버 구독자 업데이트 메소드
     */
    @PostMapping("/subscribe.do")

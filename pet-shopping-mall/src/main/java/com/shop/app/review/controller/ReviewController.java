@@ -239,18 +239,9 @@ public class ReviewController {
 
 		int newPointResult = pointService.insertPoint(newPoint);
 		
-		String to = newPoint.getPointMemberId();
-		Notification insertNotification = Notification.builder()
-				.notiCategory(3)
-				.notiContent("리뷰 작성 포인트가 적립되었습니다.")
-				.notiCreatedAt(formatTimestampNow())
-				.memberId(to) 
-				.build();
+		// 리팩토링 김대원(리뷰 적립금 알림)
+		notificationServiceImpl.reviewCreateNotification(newPoint);
 		
-		notificationRepository.insertNotification(insertNotification);
-		Notification notification = notificationRepository.latestNotification();
-		simpMessagingTemplate.convertAndSend("/pet/notice/" + to, notification);
-
 		return "redirect:/review/reviewList.do";
 	}
 
