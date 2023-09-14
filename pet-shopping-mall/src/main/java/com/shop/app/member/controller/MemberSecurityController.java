@@ -46,6 +46,7 @@ import com.shop.app.member.entity.TermsHistory;
 import com.shop.app.member.service.MemberService;
 import com.shop.app.notification.entity.Notification;
 import com.shop.app.notification.repository.NotificationRepository;
+import com.shop.app.notification.service.NotificationService;
 import com.shop.app.notification.service.NotificationServiceImpl;
 import com.shop.app.order.service.OrderService;
 import com.shop.app.payment.dto.SubScheduleDto;
@@ -82,7 +83,7 @@ public class MemberSecurityController {
    private OrderService orderService;
 
    @Autowired
-   NotificationServiceImpl notificationServiceImpl; // 알림 임플
+   NotificationService notificationService; // 알림 서비스
 	
 	@Autowired
 	SimpMessagingTemplate simpMessagingTemplate; // 알림
@@ -153,7 +154,7 @@ public class MemberSecurityController {
 	       int memberInsertCoupon = couponService.insertDeliveryCoupon(memberCoupon);
 	       
 	       // 리팩토링 김대원(회원가입 쿠폰 알림)
-	       notificationServiceImpl.memberCreateNotification(memberCoupon);
+	       int memberCreateNotification = notificationService.memberCreateNotification(memberCoupon);
        }
       
        Object obj = session.getAttribute("userAgreements");

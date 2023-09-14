@@ -44,6 +44,7 @@ import com.shop.app.order.entity.Order;
 import com.shop.app.member.entity.MemberDetails;
 import com.shop.app.notification.entity.Notification;
 import com.shop.app.notification.repository.NotificationRepository;
+import com.shop.app.notification.service.NotificationService;
 import com.shop.app.notification.service.NotificationServiceImpl;
 import com.shop.app.order.dto.OrderHistoryDto;
 import com.shop.app.order.service.OrderService;
@@ -95,8 +96,7 @@ public class ReviewController {
 	private ServletContext application;
 
 	@Autowired
-	NotificationRepository notificationRepository;
-	NotificationServiceImpl notificationServiceImpl;
+	NotificationService notificationService;
 	
 	@Autowired
 	SimpMessagingTemplate simpMessagingTemplate;
@@ -240,7 +240,7 @@ public class ReviewController {
 		int newPointResult = pointService.insertPoint(newPoint);
 		
 		// 리팩토링 김대원(리뷰 적립금 알림)
-		notificationServiceImpl.reviewCreateNotification(newPoint);
+		int reviewCreateNotification = notificationService.reviewCreateNotification(newPoint);
 		
 		return "redirect:/review/reviewList.do";
 	}

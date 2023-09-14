@@ -22,6 +22,7 @@ import com.shop.app.common.HelloSpringUtils;
 import com.shop.app.common.controller.advice.MailSender;
 import com.shop.app.notification.entity.Notification;
 import com.shop.app.notification.repository.NotificationRepository;
+import com.shop.app.notification.service.NotificationService;
 import com.shop.app.notification.service.NotificationServiceImpl;
 import com.shop.app.servicecenter.inquiry.dto.AnswerCreateDto;
 import com.shop.app.servicecenter.inquiry.dto.AnswerUpdateDto;
@@ -51,7 +52,7 @@ public class AnswerController {
 	private MailSender mailSender;
 	
 	@Autowired
-	NotificationServiceImpl notificationServiceImpl;
+	NotificationService notificationService;
 	
 	@Autowired
 	SimpMessagingTemplate simpMessagingTemplate;
@@ -84,7 +85,7 @@ public class AnswerController {
 		
 		// 리팩토링 김대원(질문답변글 알림)
 		if (result > 0) {
-			notificationServiceImpl.adminAnswerCreateNotification(questions);
+			int adminAnswerCreateNotification = notificationService.adminAnswerCreateNotification(questions);
 	    }
 		
 		return "redirect:/admin/adminQuestionDetail.do?questionId=" + questionId;

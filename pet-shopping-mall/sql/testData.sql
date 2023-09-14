@@ -1269,7 +1269,7 @@ create table cancel_order (
     constraint fk_cancel_order_id foreign key(order_id) references orderTbl(order_id) on delete cascade
 );
 
-select * from cancel_order;
+select * from orderTbl;
 
 select 
     c.* 
@@ -1278,11 +1278,11 @@ from
 where
     c.order_id in (select order_id from orderTbl where member_id='dami');
     
-select * from orderTbl where member_id='dami';
+select * from orderTbl;
 
 select * from product;
 delete from product where product_id = 68;
-update orderTbl set order_status=3 where order_no='1693815010798';
+update orderTbl set order_status=3 where order_no='1693626798090';
 update orderTbl set order_date='23/02/18' order_no='1693815010798';
 select * from orderTbl where member_id='hulk1512';
 select * from member;
