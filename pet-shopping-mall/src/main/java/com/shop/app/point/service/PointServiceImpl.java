@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.shop.app.notification.repository.NotificationRepository;
+import com.shop.app.notification.service.NotificationService;
 import com.shop.app.notification.service.NotificationServiceImpl;
 import com.shop.app.point.entity.Point;
 import com.shop.app.point.repository.PointRepository;
@@ -18,8 +19,7 @@ import com.shop.app.review.entity.ReviewDetails;
 public class PointServiceImpl implements PointService {
 
 	@Autowired
-	NotificationRepository notificationRepository;
-	NotificationServiceImpl notificationServiceImpl;
+	NotificationService notificationService;
 	
 	@Autowired
 	private PointRepository pointRepository;
@@ -83,6 +83,9 @@ public class PointServiceImpl implements PointService {
     /**
      * @author 전예라
      * 리뷰 작성 시 텍스트 500원, 사진 1,000원 적립 (리팩토링)
+     * 
+     * @author 김대원
+     * 리뷰 작성 시 실시간 알림 (리팩토링)
      */
     @Override
     public void handleReviewPoints(ReviewCreateDto _review, boolean hasImage) {
@@ -107,6 +110,6 @@ public class PointServiceImpl implements PointService {
         int newPointResult = insertPoint(newPoint);
         
 		// 리팩토링 김대원(리뷰 적립금 알림)
-		notificationServiceImpl.reviewCreateNotification(newPoint);
+        int reviewCreateNotification = notificationService.reviewCreateNotification(newPoint);
     }
 }

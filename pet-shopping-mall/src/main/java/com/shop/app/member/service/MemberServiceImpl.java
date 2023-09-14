@@ -22,6 +22,7 @@ import com.shop.app.member.dto.MypageDto;
 import com.shop.app.member.entity.Member;
 import com.shop.app.member.entity.SubMember;
 import com.shop.app.member.repository.MemberRepository;
+import com.shop.app.notification.service.NotificationService;
 import com.shop.app.notification.service.NotificationServiceImpl;
 import com.shop.app.order.dto.OrderHistoryDto;
 import com.shop.app.order.entity.Order;
@@ -51,7 +52,7 @@ public class MemberServiceImpl implements MemberService {
 	private CouponRepository couponRepository;
 
 	@Autowired
-	NotificationServiceImpl notificationServiceImpl; // 알림 임플
+	NotificationService notificationService; // 알림 서비스
 
 	@Autowired
 	private TermsRepository termsRepository;
@@ -196,7 +197,7 @@ public class MemberServiceImpl implements MemberService {
 	        memberCoupon.setUseStatus(0);
 	        couponRepository.insertDeliveryCoupon(memberCoupon);
 
-	        notificationServiceImpl.memberCreateNotification(memberCoupon);
+	        int memberCreateNotification = notificationService.memberCreateNotification(memberCoupon);
 	    }
 	}
 

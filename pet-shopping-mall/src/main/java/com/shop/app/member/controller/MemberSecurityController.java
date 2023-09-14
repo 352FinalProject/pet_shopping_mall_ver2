@@ -80,12 +80,9 @@ public class MemberSecurityController {
    
    @Autowired
    private OrderService orderService;
-
-   @Autowired
-   NotificationServiceImpl notificationServiceImpl; // 알림 임플
 	
-	@Autowired
-	SimpMessagingTemplate simpMessagingTemplate; // 알림
+   @Autowired
+   SimpMessagingTemplate simpMessagingTemplate; // 알림
 
    
    @GetMapping("/memberCreate.do") // 회원 생성 페이지로 이동하는 맵핑

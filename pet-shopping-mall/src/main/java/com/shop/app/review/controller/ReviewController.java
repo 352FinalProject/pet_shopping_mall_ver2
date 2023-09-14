@@ -82,26 +82,26 @@ public class ReviewController {
 
 	@Autowired
 	private PointService pointService;
-	
+
 	@Autowired
 	private PetService petService;
-	
+
 	@Autowired
 	private ProductService productService;
-	
+
 	@Autowired
 	private OrderService orderService;
-	
+
 	@Autowired
 	private ServletContext application;
-	
+
 	@Autowired
 	NotificationService notificationService;
-	
+
 	@Autowired
 	SimpMessagingTemplate simpMessagingTemplate;
 
-	
+
 	/**
 	 * @author 혜령
 	 * - 내가 쓴 리뷰 조회 페이지 불러오기 + 페이징바
@@ -117,7 +117,7 @@ public class ReviewController {
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String reviewMemberId = authentication.getName();
-		
+
 		// 리뷰 작성자가 주문한 상품 내역들
 		List<OrderReviewListDto> orders = orderService.findOrdersByReviewId(reviewMemberId);
 
@@ -127,14 +127,14 @@ public class ReviewController {
 				"reviewMemberId", reviewMemberId,
 				"orders", orders
 				);
-		
+
 		int totalCount = reviewService.findTotalReviewCount(reviewMemberId);
 		int totalPages = (int) Math.ceil((double) totalCount / limit);
 		model.addAttribute("totalPages", totalPages);
 
 		// 리뷰에 보여줄 내용들
 		List<ReviewListDto> reviews = reviewService.findReviewAll(params);
-		
+
 		model.addAttribute("reviews", reviews);
 	}
 
@@ -148,11 +148,11 @@ public class ReviewController {
 			@RequestParam("productId") int productId, 
 			@RequestParam("orderId") int orderId, 
 			Model model) {
-		
+
 		model.addAttribute("productDetailId", productDetailId);
 		model.addAttribute("productId", productId);
 		model.addAttribute("orderId", orderId);
-	   
+
 	}
 
 	/**
@@ -160,10 +160,8 @@ public class ReviewController {
 	 * 리뷰 작성
 	 * 
 	 * @author 전예라
-	 * 리뷰 작성 시 텍스트 500원, 사진 1000원 포인트 적립
+	 * 리뷰 작성 시 텍스트 500원, 사진 1000원 포인트 적립 (리팩토링)
 	 * 
-	 * @author 김대원
-	 * 리뷰 작성 시 회원에게 포인트 적립 알림
 	 */
 	@PostMapping("/reviewCreate.do")
 	public String reviewCreate(
@@ -182,13 +180,13 @@ public class ReviewController {
 
 		// 이미지 상대경로 지정
 		String saveDirectory = application.getRealPath("/resources/upload/review");
-		
+
 		for(MultipartFile upFile : upFiles) {
 			if(!upFile.isEmpty()) {
 				String imageOriginalFilename = upFile.getOriginalFilename();
 				String imageRenamedFilename = HelloSpringUtils.getRenameFilename(imageOriginalFilename);
 				File destFile = new File(saveDirectory, imageRenamedFilename);
-				
+
 				upFile.transferTo(destFile);
 
 				int imageType = 1;
@@ -206,42 +204,16 @@ public class ReviewController {
 				hasImage = true;
 			}
 		}
-		
-		// 리뷰내용, 사진, 펫정보 db저장	
+
+		// 리뷰내용, 사진, 펫정보 db저장   
 		Review review = reviewService.createReview(_review, attachments, pet);
-	
 		int reviewId = reviewService.insertReview(review);
-		
-//		int orderId = reviews.getOrderId();
-//		int productDetailId = reviews.getProductDetailId();
-//		String reviewMemberId = reviews.getReviewMemberId();
-		
+
 		ReviewDetailDto pointReviewId = reviewService.findReviewId(review.getReviewId());
 
-		point.setPointMemberId(_review.getReviewMemberId());
-		point.setReviewId(_review.getReviewId());
+		// 포인트 처리
+		pointService.handleReviewPoints(_review, hasImage);
 
-		Point currentPoints = pointService.findReviewPointCurrentById(point); 
-
-		int pointAmount = 500;
-		if (hasImage) {
-			pointAmount += 500;
-		}
-
-		int updatedPointAmount = currentPoints.getPointCurrent() + pointAmount;
-
-		Point newPoint = new Point();
-		newPoint.setPointCurrent(updatedPointAmount); 
-		newPoint.setPointAmount(pointAmount); 
-		newPoint.setPointType("리뷰적립");
-		newPoint.setPointMemberId(_review.getReviewMemberId());
-		newPoint.setReviewId(pointReviewId.getReviewId());
-
-		int newPointResult = pointService.insertPoint(newPoint);
-		
-		// 리팩토링 김대원(리뷰 적립금 알림)
-		int reviewCreateNotification = notificationService.reviewCreateNotification(newPoint);
-		
 		return "redirect:/review/reviewList.do";
 	}
 
@@ -254,8 +226,8 @@ public class ReviewController {
 	 */
 	@PostMapping("/reviewDelete.do")
 	public String reviewDelete(@RequestParam int reviewId) {
-	    reviewService.deleteReviewAndRollbackPoints(reviewId);
-	    return "redirect:/review/reviewList.do";
+		reviewService.deleteReviewAndRollbackPoints(reviewId);
+		return "redirect:/review/reviewList.do";
 	}
 
 
@@ -269,18 +241,18 @@ public class ReviewController {
 			Model model, 
 			Pet pet, 
 			Principal principal) {
-		
+
 		ReviewDetailDto reviews = reviewService.findReviewId(reviewId);
 		model.addAttribute("reviews", reviews);
-		
+
 		// 이미지 파일 정보 조회
 		ReviewDetails reviewDetails = reviewService.findImageAttachmentsByReviewId(reviewId);
 		model.addAttribute("reviewDetails", reviewDetails);
-		
+
 		// 구매한 상품 정보 조회
 		ReviewProductDto reviewProduct = reviewService.findProductReviewId(reviewId);
 		model.addAttribute("reviewProduct", reviewProduct);
-		
+
 	}
 
 
@@ -305,17 +277,17 @@ public class ReviewController {
 
 		Review reviews = _review.toReview();
 		int result = reviewService.updateReview(reviews);
-		
+
 		return "redirect:/review/reviewDetail.do?reviewId=" + reviews.getReviewId();
 
 	}
 
 	private String formatTimestamp(Timestamp timestamp) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
-        return dateFormat.format(timestamp);
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
+		return dateFormat.format(timestamp);
 	}
 	private String formatTimestampNow() {
-	    return formatTimestamp(new Timestamp(System.currentTimeMillis()));
+		return formatTimestamp(new Timestamp(System.currentTimeMillis()));
 	}
 
 }
