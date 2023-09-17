@@ -1,9 +1,13 @@
 package com.shop.app.servicecenter.inquiry.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.shop.app.common.entity.ImageAttachment;
+import com.shop.app.servicecenter.inquiry.dto.QuestionCreateDto;
 import com.shop.app.servicecenter.inquiry.entity.Answer;
 import com.shop.app.servicecenter.inquiry.entity.Question;
 import com.shop.app.servicecenter.inquiry.entity.QuestionDetails;
@@ -37,4 +41,6 @@ public interface QuestionService {
 	int calculateAnswerCount(int questionId);
 
 	ImageAttachment findAttachmentById(int questionId);
+
+	int createQuestionWithAttachments(QuestionCreateDto _question, List<MultipartFile> upFiles, String saveDirectory) throws IllegalStateException, IOException;
 }

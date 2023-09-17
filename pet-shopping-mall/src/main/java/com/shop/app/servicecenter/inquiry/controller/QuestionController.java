@@ -121,53 +121,18 @@ public class QuestionController {
 	
 	/**
 	 * @author 전예라
-	 * 이미지 업로드 하는 메소드
+	 * 이미지 업로드 하는 메소드 (리팩토링)
 	 * 
 	 */
 	@PostMapping("/inquiry/questionCreate.do")
 	public String questionCreate(QuestionCreateDto _question, 
-			@RequestParam(value = "upFile", required = false) List<MultipartFile> upFiles) 
-					throws IllegalStateException, IOException {
-		
-		List<ImageAttachment> attachments = new ArrayList<>();
-
-		String saveDirectory = application.getRealPath("/resources/upload/question");
-				
-		for(MultipartFile upFile : upFiles) {			
-		    if(!upFile.isEmpty()) {
-		        String imageOriginalFilename = upFile.getOriginalFilename();
-		        String imageRenamedFilename = HelloSpringUtils.getRenameFilename(imageOriginalFilename); 
-		        File destFile = new File(saveDirectory, imageRenamedFilename);
-		        upFile.transferTo(destFile);	
-
-		        int imageType = 1; 
-		        Thumbnail thumbnail = Thumbnail.valueOf("N");
-
-		        ImageAttachment attach = 
-		            ImageAttachment.builder()
-		            .imageOriginalFilename(imageOriginalFilename)
-		            .imageRenamedFilename(imageRenamedFilename)
-		            .thumbnail(thumbnail)
-		            .imageType(imageType)
-		            .imageFileSize(upFile.getSize())
-		            .build();
-
-		        attachments.add(attach);
-		    }
-		}
-		
-		QuestionDetails questions = QuestionDetails.builder()
-				.questionMemberId(_question.getQuestionMemberId())
-				.questionTitle(_question.getQuestionTitle())
-				.questionContent(_question.getQuestionContent())
-				.questionCategory(_question.getQuestionCategory())
-				.questionEmail(_question.getQuestionEmail())
-				.attachments(attachments)
-				.build();
-		
-		int questionId = questionService.insertQuestion(questions);
-		
-		return "redirect:/servicecenter/inquiry/questionList.do";
+	        @RequestParam(value = "upFile", required = false) List<MultipartFile> upFiles) 
+	                throws IllegalStateException, IOException {
+	    
+	    String saveDirectory = application.getRealPath("/resources/upload/question");
+	    int questionId = questionService.createQuestionWithAttachments(_question, upFiles, saveDirectory);
+	    
+	    return "redirect:/servicecenter/inquiry/questionList.do";
 	}
 	
 	@PostMapping("/inquiry/DeleteQuestion.do")
