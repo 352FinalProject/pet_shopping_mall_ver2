@@ -138,7 +138,6 @@
                      </div>
                   </div>
                </c:if>
-   
                <div class="product-price">
                   <div class="product-price-desc">
                      총 상품 금액 <span class="totalPrice" id="totalPrice"></span>원
@@ -278,7 +277,7 @@
                         </em>
                      </div>
                      <!-- 리뷰 펫 -->
-                     <c:set var="pets" value="${reviewPetsMap[review.reviewId]}" />
+<%--                      <c:set var="pets" value="${reviewPetsMap[review.reviewId]}" />
                      <c:if test="${not empty pets}">
                         <div class="reivew-pet-box">
                            <!-- 펫정보 -->
@@ -297,7 +296,7 @@
                      </c:if>
                      <c:if test="${empty pets}">
 	                      <em class="review-pet-name">펫 정보가 등록되지 않은 회원입니다.</em>
-                     </c:if>
+                     </c:if> --%>
                      <!-- 리뷰 별점 -->
                      <c:set var="myReviewId" value="${review.reviewId}" />
                      <div class="review-detail-box">

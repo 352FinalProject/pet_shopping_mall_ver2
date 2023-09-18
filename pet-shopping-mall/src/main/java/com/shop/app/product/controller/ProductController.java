@@ -44,7 +44,6 @@ import com.shop.app.pet.entity.Pet;
 import com.shop.app.pet.service.PetService;
 import com.shop.app.product.dto.ProductCreateDto;
 import com.shop.app.product.dto.ProductInfoDto;
-import com.shop.app.product.dto.ProductReviewPetInfoDto;
 import com.shop.app.product.dto.ProductSearchDto;
 import com.shop.app.product.entity.Product;
 import com.shop.app.product.entity.ProductCategory;
@@ -52,6 +51,8 @@ import com.shop.app.product.entity.ProductDetail;
 import com.shop.app.product.entity.ProductImages;
 import com.shop.app.product.service.ProductService;
 import com.shop.app.review.dto.ProductReviewAvgDto;
+import com.shop.app.review.dto.ProductReviewDto;
+import com.shop.app.review.dto.ProductReviewPetInfoDto;
 import com.shop.app.review.entity.Review;
 import com.shop.app.review.entity.ReviewDetails;
 import com.shop.app.review.service.ReviewService;
@@ -99,12 +100,12 @@ public class ProductController {
 
 		int totalPages = (int) Math.ceil((double) totalCount / limit);
 		model.addAttribute("totalPages", totalPages); 
-
 		
 		// 상품Id에 대한 모든 리뷰 가져오기 (이혜령)
-		List<Review> reviews = reviewService.findProductReviewAll(params, productId);
+		List<ProductReviewDto> reviews = reviewService.findProductReviewAll(params, productId);
 		model.addAttribute("reviews", reviews);
-
+		
+		log.debug("reviews 이거뭐야 = {} ", reviews);
 
 		// 리뷰 평균 별점에 대한 퍼센트 구하기 (이혜령)
 		List<Review> allReviews = reviewService.findProductReviewAllStarPercent(productId);
@@ -159,18 +160,17 @@ public class ProductController {
 		model.addAttribute("productDetails", productDetails); 
 
 		// 상품 상세 페이지 리뷰 - 펫 정보  (이혜령)
-		Map<Integer, List<ProductReviewPetInfoDto>> reviewPetsMap = new HashMap<>();
-		for (Review review : reviews) {
-			List<ProductReviewPetInfoDto> pets = petService.findReviewPetByMemberId(review.getReviewMemberId());
-			reviewPetsMap.put(review.getReviewId(), pets);
-		}
-
+//		Map<Integer, List<ProductReviewPetInfoDto>> reviewPetsMap = new HashMap<>();
+//		for (Review review : reviews) {
+//			List<ProductReviewPetInfoDto> pets = petService.findReviewPetByMemberId(review.getReviewMemberId());
+//			reviewPetsMap.put(review.getReviewId(), pets);
+//		}
 
 		// 상품 상세 페이지 리뷰 - 이미지 파일 (이혜령)
 		Map<Integer, List<String>> reviewImageMap = new HashMap<>();
-		for (Review review : reviews) {
+		for (ProductReviewDto review : reviews) {
 			int reviewId2 = review.getReviewId();
-			ReviewDetails reviewDetails = reviewService.findProductImageAttachmentsByReviewId(reviewId2);
+			ReviewDetails reviewDetails = reviewService.findImageAttachmentsByReviewId(reviewId2);
 
 			if (reviewDetails.getAttachments() != null && !reviewDetails.getAttachments().isEmpty()) {
 				List<String> imageFilenames = new ArrayList<>();
@@ -181,17 +181,18 @@ public class ProductController {
 				reviewImageMap.put(reviewId2, imageFilenames);
 			}
 		}
-
+		
 		model.addAttribute("reviewImageMap", reviewImageMap);
 
 		Map<Integer, List<OrderReviewListDto>> reviewProductMap = new HashMap<>();
-		for (Review review : reviews) {
+		for (ProductReviewDto review : reviews) {
 			List<OrderReviewListDto> ReviewOrders = orderService.findProductByReviewId(review.getReviewId(), productId);
 			reviewProductMap.put(review.getReviewId(), ReviewOrders);
 		}
 
-		model.addAttribute("reviewPetsMap", reviewPetsMap); 
+//		model.addAttribute("reviewPetsMap", reviewPetsMap); 
 		model.addAttribute("reviewProductMap", reviewProductMap); 
+		
 		// 상품 상세 페이지 리뷰 - 리뷰 전체개수 확인 (이혜령)
 		int reveiwTotalCount = reviewService.findReviewTotalCount(productId);
 		model.addAttribute("reviewTotalCount", reveiwTotalCount);

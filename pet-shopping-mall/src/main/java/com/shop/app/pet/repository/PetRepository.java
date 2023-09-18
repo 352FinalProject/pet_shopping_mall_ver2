@@ -12,7 +12,7 @@ import org.apache.ibatis.session.RowBounds;
 import com.shop.app.pet.dto.PetCreateDto;
 import com.shop.app.pet.dto.PetUpdateDto;
 import com.shop.app.pet.entity.Pet;
-import com.shop.app.product.dto.ProductReviewPetInfoDto;
+import com.shop.app.review.dto.ProductReviewPetInfoDto;
 
 
 

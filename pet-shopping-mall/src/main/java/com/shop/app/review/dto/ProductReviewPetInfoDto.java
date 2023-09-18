@@ -1,4 +1,4 @@
-package com.shop.app.product.dto;
+package com.shop.app.review.dto;
 
 import com.shop.app.pet.entity.PetGender;
 

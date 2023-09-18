@@ -9,6 +9,7 @@ import com.shop.app.common.entity.ImageAttachment;
 import com.shop.app.pet.entity.Pet;
 import com.shop.app.product.dto.ProductInfoDto;
 import com.shop.app.review.dto.ProductReviewAvgDto;
+import com.shop.app.review.dto.ProductReviewDto;
 import com.shop.app.review.dto.ReviewCreateDto;
 import com.shop.app.review.dto.ReviewDetailDto;
 import com.shop.app.review.dto.ReviewListDto;
@@ -49,10 +50,7 @@ public interface ReviewService {
 	int findProductTotalReviewCount(int productId);
 
 	// 상품 상세페이지 전체 리뷰 
-	List<Review> findProductReviewAll(Map<String, Object> params, int productId);
-
-	// 상품 상세페이지 - 리뷰 상세조회 - 이미지 조회
-	ReviewDetails findProductImageAttachmentsByReviewId(int reviewId);
+	List<ProductReviewDto> findProductReviewAll(Map<String, Object> params, int productId);
 
 	// 상품 - 리뷰 전체개수 확인
 	int findReviewTotalCount(int productId);

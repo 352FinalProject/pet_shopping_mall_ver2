@@ -29,24 +29,6 @@
 	    r.review_id = #{reviewId}
 	</select>
 	
-	<select id="findProductImageAttachmentsByReviewId" resultMap="ReviewDetailsResultMap">
-	SELECT
-	    r.review_id,
-	    r.review_title,
-	    r.review_content,
-	    r.review_star_rate,
-	    ia.image_original_filename,
-	    ia.image_renamed_filename
-	FROM 
-	    review r
-	LEFT JOIN 
-	    image_attachment_mapping iam ON r.review_id = iam.ref_id AND iam.ref_table = 'review'
-	LEFT JOIN
-	    image_attachment ia ON iam.image_id = ia.image_id
-	WHERE 
-	    r.review_id = #{reviewId}
-	</select>
-    
     <resultMap type="Review" id="reviewResultMap">
     	<id property="reviewId" column="review_id"/>
     	<result property="petId" column="pet_id"/>
@@ -148,8 +130,6 @@
       <result column="image_renamed_filename" property="imageRenamedFileName" />
    </resultMap>
    
-   
-   
 	<select id="findProductReviewId" resultType="ReviewProductDto">
 	SELECT 
 	    p.product_name,
@@ -172,6 +152,49 @@
       <result column="product_name" property="productName" />
       <result column="option_name" property="optionName" />
       <result column="option_value" property="optionValue" />
+   </resultMap>
+   
+   <select id="findProductReviewAll" resultType="ProductReviewDto">
+	SELECT 
+		r.review_member_id,
+	    r.review_id,
+	    r.review_title,
+	    r.review_content,
+	    r.review_star_rate,
+	    r.review_created_at,
+	    r.product_id,
+	    p.pet_id,
+	    p.pet_name,
+	    p.pet_gender,
+	    p.pet_age,
+	    p.pet_weight,
+	    p.pet_breed
+	FROM 
+	    review r 
+	left JOIN pet p
+	    ON r.review_member_id = p.member_id
+	    or r.pet_id is null
+	left join product pd
+	    on r.product_id = pd.product_id
+	where 
+	    r.product_id = #{productId}
+	order by 
+		r.review_created_at desc
+   </select>
+	<resultMap type="ProductReviewDto" id="findProductReviewAll">
+      <result column="review_id" property="reviewId" />
+      <result column="product_id" property="productId" />
+      <result column="review_title" property="reviewTitle" />
+      <result column="review_member_id" property="reviewMemberId" />
+      <result column="review_content" property="reviewContent" />
+      <result column="review_star_rate" property="reviewStarRate" />
+      <result column="review_created_at" property="reviewCreatedAt" jdbcType="TIMESTAMP" javaType="java.sql.Timestamp"/>
+      <result column="pet_id" property="petId" />
+      <result column="pet_name" property="petName" />
+      <result column="pet_age" property="petAge" />
+      <result column="pet_breed" property="petBreed" />
+      <result column="pet_weight" property="petWeight" />
+      <result column="pet_gender" property="petGender" />
    </resultMap>
 	
 	

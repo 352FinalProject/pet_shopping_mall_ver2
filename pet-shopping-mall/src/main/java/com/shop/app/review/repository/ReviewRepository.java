@@ -14,6 +14,7 @@ import org.apache.ibatis.session.RowBounds;
 import com.shop.app.common.entity.ImageAttachment;
 import com.shop.app.product.dto.ProductInfoDto;
 import com.shop.app.review.dto.ProductReviewAvgDto;
+import com.shop.app.review.dto.ProductReviewDto;
 import com.shop.app.review.dto.ReviewDetailDto;
 import com.shop.app.review.dto.ReviewListDto;
 import com.shop.app.review.dto.ReviewProductDto;
@@ -73,11 +74,10 @@ public interface ReviewRepository {
 	int findProductTotalReviewCount(int productId);
 	
 	// 상품 상세페이지 전체 리뷰
-	@Select("select * from review where product_id = #{productId} order by review_created_at desc")
-	List<Review> findProductReviewAll(RowBounds rowBounds, int productId);
-
-	// 상품 상세페이지 - 리뷰 상세조회 - 이미지 조회
-	ReviewDetails findProductImageAttachmentsByReviewId(int reviewId);
+	List<ProductReviewDto> findProductReviewAll(RowBounds rowBounds, int productId);
+	
+//	@Select("select * from review where product_id = #{productId} order by review_created_at desc")
+//	List<Review> findProductReviewAll(RowBounds rowBounds, int productId);
 
 	// 상품 디테일 - 리뷰 전체개수 확인
 	@Select("select count (*) from review where product_id = #{productId}")

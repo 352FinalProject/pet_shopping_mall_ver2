@@ -27,7 +27,6 @@ public class Review {
 	private String reviewContent;
 	private int reviewStarRate;
 	
-	private int imageId;
 	private LocalDateTime reviewCreatedAt;
 	
 	

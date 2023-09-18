@@ -21,6 +21,7 @@ import com.shop.app.product.dto.ProductInfoDto;
 import com.shop.app.product.entity.Product;
 import com.shop.app.product.repository.ProductRepository;
 import com.shop.app.review.dto.ProductReviewAvgDto;
+import com.shop.app.review.dto.ProductReviewDto;
 import com.shop.app.review.dto.ReviewCreateDto;
 import com.shop.app.review.dto.ReviewDetailDto;
 import com.shop.app.review.dto.ReviewListDto;
@@ -197,17 +198,12 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 
 	@Override
-	public List<Review> findProductReviewAll(Map<String, Object> params, int productId) {
+	public List<ProductReviewDto> findProductReviewAll(Map<String, Object> params, int productId) {
 		int limit = (int) params.get("limit");
 		int page = (int) params.get("page");
 		int offset = (page - 1) * limit;
 		RowBounds rowBounds = new RowBounds(offset, limit);
 		return reviewRepository.findProductReviewAll(rowBounds, productId);
-	}
-
-	@Override
-	public ReviewDetails findProductImageAttachmentsByReviewId(int reviewId) {
-		return reviewRepository.findProductImageAttachmentsByReviewId(reviewId);
 	}
 
 	@Override
