@@ -316,17 +316,15 @@
 								<div class="gallery_wrap3"
 									style="height: 280px; margin-left: 77px; margin-right: 70px; margin-bottom: 27px;">
 									<ul class="gallery3">
-										<c:set var="imageFilenames"
-											value="${reviewImageMap[review.reviewId]}" />
-										<c:if test="${not empty reviewImageMap[review.reviewId]}">
-											<c:forEach var="filename"
-												items="${reviewImageMap[review.reviewId]}" varStatus="loop">
-												<li class="gallery_item1"><img class="indexImg"
-													alt="Review Image"
-													src="${pageContext.request.contextPath}/resources/upload/review/${filename}">
-												</li>
-											</c:forEach>
-										</c:if>
+										<c:set var="reviewImages" value="${productDetail.reviews}" />
+										<c:forEach var="review" items="${reviewImages}">
+										  <c:forEach var="filename" items="${review.reviewImages}" varStatus="loop">
+										    <li class="gallery_item1">
+										      <img class="indexImg" alt="Review Image"
+										           src="${pageContext.request.contextPath}/resources/upload/review/${filename.imageRenamedFilename}">
+										    </li>
+										  </c:forEach>
+										</c:forEach>
 									</ul>
 								</div>
 								<div class="button_box">

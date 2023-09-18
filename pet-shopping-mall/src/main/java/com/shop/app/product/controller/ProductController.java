@@ -98,9 +98,12 @@ public class ProductController {
 		ProductDetailDto productDetail = productService.getProductDetails(productId, params);
 		int totalCount = productDetail.getReviewCnt();
 		int totalPages = (int) Math.ceil((double) totalCount / limit);
+		
+		
+		log.debug("productDetail = {}", productDetail);
+		
 		model.addAttribute("totalPages", totalPages);
 		model.addAttribute("productDetail", productDetail);
-
 //		double[] starPercentages = new double[6]; // 각 별점별 백분율을 저장할 배열
 //
 //		for (int i = 1; i <= 5; i++) {
