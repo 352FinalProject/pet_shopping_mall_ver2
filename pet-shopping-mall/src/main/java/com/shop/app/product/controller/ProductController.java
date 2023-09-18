@@ -180,14 +180,7 @@ public class ProductController {
 
 		model.addAttribute("reviewImageMap", reviewImageMap);
 
-		Map<Integer, List<OrderReviewListDto>> reviewProductMap = new HashMap<>();
-		for (Review review : reviews) {
-			List<OrderReviewListDto> ReviewOrders = orderService.findProductByReviewId(review.getReviewId(), productId);
-			reviewProductMap.put(review.getReviewId(), ReviewOrders);
-		}
-
 		model.addAttribute("reviewPetsMap", reviewPetsMap); 
-		model.addAttribute("reviewProductMap", reviewProductMap); 
 		// 상품 상세 페이지 리뷰 - 리뷰 전체개수 확인 (이혜령)
 		int reveiwTotalCount = reviewService.findReviewTotalCount(productId);
 		model.addAttribute("reviewTotalCount", reveiwTotalCount);
