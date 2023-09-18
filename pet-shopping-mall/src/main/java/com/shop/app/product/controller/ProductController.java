@@ -104,49 +104,6 @@ public class ProductController {
 		
 		model.addAttribute("totalPages", totalPages);
 		model.addAttribute("productDetail", productDetail);
-//		double[] starPercentages = new double[6]; // 각 별점별 백분율을 저장할 배열
-//
-//		for (int i = 1; i <= 5; i++) {
-//			starPercentages[i] = (double) starCounts[i] / totalReviews * 100;
-//		}
-//		model.addAttribute("starPercentages", starPercentages);
-
-		// starPercentages 배열을 계산하고, 백분율로 변환하여 소수점 없이 포맷팅한 리스트를 생성
-//		List<String> formattedPercentages = new ArrayList<>();
-//		for (double percentage : starPercentages) {
-//			String formatted = new DecimalFormat("###").format(percentage); // 소수점 없이 포맷팅
-//			formattedPercentages.add(formatted);
-//		}
-//		model.addAttribute("formattedPercentages", formattedPercentages);
-
-//		// 상품 상세 페이지 리뷰 - 펫 정보  (이혜령)
-//		Map<Integer, List<Pet>> reviewPetsMap = new HashMap<>();
-//		for (Review review : reviews) {
-//			List<Pet> pets = petService.findReviewPetByMemberId(review.getReviewMemberId());
-//			reviewPetsMap.put(review.getReviewId(), pets);
-//		}
-
-
-//		// 상품 상세 페이지 리뷰 - 이미지 파일 (이혜령)
-//		Map<Integer, List<String>> reviewImageMap = new HashMap<>();
-//		for (Review review : reviews) {
-//			int reviewId2 = review.getReviewId();
-//			ReviewDetails reviewDetails = reviewService.findProductImageAttachmentsByReviewId(reviewId2);
-//
-//			if (reviewDetails.getAttachments() != null && !reviewDetails.getAttachments().isEmpty()) {
-//				List<String> imageFilenames = new ArrayList<>();
-//
-//				for (ImageAttachment attachment : reviewDetails.getAttachments()) {
-//					imageFilenames.add(attachment.getImageRenamedFilename());
-//				}
-//				reviewImageMap.put(reviewId2, imageFilenames);
-//			}
-//		}
-//
-//		model.addAttribute("reviewImageMap", reviewImageMap);
-//
-
-//		model.addAttribute("reviewPetsMap", reviewPetsMap); 
 		
 
 		if (member != null) {
