@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 import com.shop.app.product.dto.AdminProductDto;
+import com.shop.app.product.dto.ProductDetailDto;
 import com.shop.app.product.dto.ProductInfoDto;
 import com.shop.app.product.dto.ProductSearchDto;
 import com.shop.app.product.entity.Product;
@@ -93,6 +94,14 @@ public interface ProductService {
 	List<AdminProductDto> findProductsAll();
 	List<ProductSearchDto> searchHomeProductsById(int categoryId);
 	List<AdminProductDto> findAdminProductsBySearch(String searchKeyword);
+	
+	
+	
+	/**
+	 * @author 김담희
+	 * 상품 상세 페이지 성능 개선용 테스트 메소드
+	 */
+	ProductDetailDto getProductDetails(int productId, Map<String, Object> params);
 
 
 

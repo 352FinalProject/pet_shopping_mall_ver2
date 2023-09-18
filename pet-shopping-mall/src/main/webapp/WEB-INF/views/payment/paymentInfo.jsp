@@ -600,7 +600,7 @@ function updateFinalAmount() {
     console.log(totalPrice, enteredPoints, selectedCouponType, selectedCouponValue, memberRole);
     console.log("delfee: ", delfee);
     console.log("Final Amount: ", finalAmount);
-    $('#couponDiscount').text(couponDiscount === 0 ? '원' : couponDiscount.toLocaleString() + '원');
+    $('#couponDiscount').text(couponDiscount.toLocaleString() + '원');
     $('#pointsDiscount').text(pointsDiscount.toLocaleString() + '원');
     $('#amount').text(finalAmount.toLocaleString());
     console.log("updateFinalAmount 콜콜");

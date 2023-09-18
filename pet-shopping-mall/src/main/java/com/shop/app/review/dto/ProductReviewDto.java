@@ -1,18 +1,26 @@
 package com.shop.app.review.dto;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
+import java.util.List;
 
+import com.shop.app.common.entity.ImageAttachment;
 import com.shop.app.pet.entity.Pet;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class ProductReviewDto {
-	private String name;
-	
-	private String productId;
+	private int reviewId;
+	private int reviewStarRate;
+	private String reviewMemberId;
+	private Timestamp reviewCreatedAt;
 	private String reviewTitle;
 	private String reviewContent;
-	private Timestamp reviewCreatedAt;
-	
+	private List<ImageAttachment> reviewImages;
 	private Pet pet;
 	
-	// 이미지
 }

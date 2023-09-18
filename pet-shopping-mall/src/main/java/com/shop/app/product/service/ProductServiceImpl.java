@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.shop.app.common.entity.ImageAttachment;
 import com.shop.app.product.dto.AdminProductDto;
+import com.shop.app.product.dto.ProductDetailDto;
 import com.shop.app.product.dto.ProductInfoDto;
 import com.shop.app.product.dto.ProductSearchDto;
 import com.shop.app.product.entity.Product;
@@ -18,6 +19,8 @@ import com.shop.app.product.entity.ProductDetail;
 import com.shop.app.product.entity.ProductImages;
 import com.shop.app.product.repository.ProductRepository;
 import com.shop.app.review.dto.ProductReviewAvgDto;
+import com.shop.app.review.dto.ProductReviewDto;
+import com.shop.app.review.entity.Review;
 import com.shop.app.review.repository.ReviewRepository;
 import com.shop.app.servicecenter.inquiry.entity.QuestionDetails;
 import com.shop.app.servicecenter.inquiry.repository.QuestionRepository;
@@ -227,5 +230,19 @@ public class ProductServiceImpl implements ProductService {
 	@Override
 	public List<AdminProductDto> findAdminProductsBySearch(String searchKeyword) {
 		return productRepository.findAdminProductsBySearch(searchKeyword);
+	}
+
+	@Override
+	public ProductDetailDto getProductDetails(int productId, Map<String, Object> params) {
+		int limit = (int) params.get("limit");
+		int page = (int) params.get("page");
+		int offset = (page - 1) * limit;
+		RowBounds rowBounds = new RowBounds(offset, limit);
+		
+		ProductDetailDto product = productRepository.getProductDetails(productId);
+		List<ProductReviewDto> reviews = reviewRepository.getProductReview(rowBounds, productId);
+		product.setReviews(reviews);
+		
+		return product;
 	}
 }

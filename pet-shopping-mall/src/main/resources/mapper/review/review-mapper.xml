@@ -64,6 +64,45 @@
 	WHERE 
 	    r.review_id = #{reviewId} and r.order_id = #{orderId}
 	</select>
+	
+	
+	
+	
+	
+	
+	<select id="getProductReview" resultMap="productReviewDto">
+	SELECT
+		r.review_id,
+		r.review_member_id,
+	    r.review_title,
+	    r.review_content,
+	    r.review_star_rate,
+	    ia.image_renamed_filename
+	FROM 
+	    review r
+	LEFT JOIN 
+	    image_attachment_mapping iam ON r.review_id = iam.ref_id AND iam.ref_table = 'review'
+	LEFT JOIN
+	    image_attachment ia ON iam.image_id = ia.image_id
+	WHERE 
+	    r.product_id = #{productId}
+	</select>
+	
+	
+	<resultMap type="ProductReviewDto" id="productReviewDto">
+    	<result property="reviewId" column="review_id"/>
+    	<result property="reviewMemberId" column="review_member_id"/>
+    	<result property="reviewTitle" column="review_title"/>
+    	<result property="reviewStarRate" column="review_star_rate"/>
+    	<result property="reviewContent" column="review_content"/>
+    	<result property="reviewCreatedAt" column="review_created_at"/>
+		<collection property="reviewImages" ofType="imageAttachment">
+	        <result property="imageRenamedFilename" column="image_renamed_filename"/>
+	    </collection>
+	</resultMap>
+	
+	
+	
     
     <resultMap type="Review" id="reviewResultMap">
     	<id property="reviewId" column="review_id"/>

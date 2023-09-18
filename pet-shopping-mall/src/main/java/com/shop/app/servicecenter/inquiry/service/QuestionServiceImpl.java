@@ -1,8 +1,5 @@
 package com.shop.app.servicecenter.inquiry.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -11,10 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.shop.app.common.HelloSpringUtils;
 import com.shop.app.common.entity.ImageAttachment;
-import com.shop.app.common.entity.Thumbnail;
-import com.shop.app.servicecenter.inquiry.dto.QuestionCreateDto;
 import com.shop.app.servicecenter.inquiry.entity.Answer;
 import com.shop.app.servicecenter.inquiry.entity.Question;
 import com.shop.app.servicecenter.inquiry.entity.QuestionDetails;
@@ -69,51 +63,6 @@ public class QuestionServiceImpl implements QuestionService {
 	    }
 	    return result;
 	}
-	
-	/**
-	 * @author 전예라
-	 * 이미지 업로드 하는 메소드 (리팩토링)
-	 * 
-	 */
-	@Override
-	public int createQuestionWithAttachments(QuestionCreateDto _question, List<MultipartFile> upFiles, String saveDirectory) throws IllegalStateException, IOException{
-	    List<ImageAttachment> attachments = new ArrayList<>();
-
-	    for(MultipartFile upFile : upFiles) {            
-	        if(!upFile.isEmpty()) {
-	            String imageOriginalFilename = upFile.getOriginalFilename();
-	            String imageRenamedFilename = HelloSpringUtils.getRenameFilename(imageOriginalFilename); 
-	            File destFile = new File(saveDirectory, imageRenamedFilename);
-	            upFile.transferTo(destFile);    
-
-	            int imageType = 1; 
-	            Thumbnail thumbnail = Thumbnail.valueOf("N");
-
-	            ImageAttachment attach = 
-	                ImageAttachment.builder()
-	                .imageOriginalFilename(imageOriginalFilename)
-	                .imageRenamedFilename(imageRenamedFilename)
-	                .thumbnail(thumbnail)
-	                .imageType(imageType)
-	                .imageFileSize(upFile.getSize())
-	                .build();
-
-	            attachments.add(attach);
-	        }
-	    }
-
-	    QuestionDetails questions = QuestionDetails.builder()
-	        .questionMemberId(_question.getQuestionMemberId())
-	        .questionTitle(_question.getQuestionTitle())
-	        .questionContent(_question.getQuestionContent())
-	        .questionCategory(_question.getQuestionCategory())
-	        .questionEmail(_question.getQuestionEmail())
-	        .attachments(attachments)
-	        .build();
-
-	    return insertQuestion(questions);
-	}
-
 	
 	@Override
 	public int deleteQuestion(int questionId) {

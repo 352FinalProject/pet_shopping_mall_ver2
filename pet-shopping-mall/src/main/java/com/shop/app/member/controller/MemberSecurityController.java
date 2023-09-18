@@ -46,7 +46,6 @@ import com.shop.app.member.entity.TermsHistory;
 import com.shop.app.member.service.MemberService;
 import com.shop.app.notification.entity.Notification;
 import com.shop.app.notification.repository.NotificationRepository;
-import com.shop.app.notification.service.NotificationServiceImpl;
 import com.shop.app.order.service.OrderService;
 import com.shop.app.payment.dto.SubScheduleDto;
 import com.shop.app.point.entity.Point;
@@ -80,9 +79,12 @@ public class MemberSecurityController {
    
    @Autowired
    private OrderService orderService;
-	
+
    @Autowired
-   SimpMessagingTemplate simpMessagingTemplate; // 알림
+	NotificationRepository notificationRepository; // 알림 레파
+	
+	@Autowired
+	SimpMessagingTemplate simpMessagingTemplate; // 알림
 
    
    @GetMapping("/memberCreate.do") // 회원 생성 페이지로 이동하는 맵핑
@@ -99,52 +101,101 @@ public class MemberSecurityController {
     * 회원가입 (비밀번호 암호화 처리)
     * 
     * @author 전예라
-    * 이메일 인증 api, 회원가입 포인트 지급, 회원가입 쿠폰 발급, 이용약관 처리 (리팩토링)
+    * 이메일 인증 api, 회원가입 포인트 지급, 회원가입 쿠폰 발급, 이용약관 처리
     * 
+    * @author 김대원
+    * 회원가입 쿠폰이 발급되면 회원에게 알림 발송
     */
    @PostMapping("/memberCreate.do")
    public String memberCreate(@Valid MemberCreateDto member, BindingResult bindingResult,
          RedirectAttributes redirectAttr, HttpSession session) {
-	    
-	   HashMap<Integer, Accept> userAgreements = fetchUserAgreements(session);
-	   member.setUserAgreements(userAgreements);
-	   
-       Boolean isVerified = (Boolean) session.getAttribute("emailVerified");
 
-       if (isVerified == null || !isVerified) {
-           redirectAttr.addFlashAttribute("msg", "이메일 인증을 해주세요.");
-           return "redirect:/member/memberCreate.do";
-       }
+      Boolean isVerified = (Boolean) session.getAttribute("emailVerified");
+      if (isVerified == null || !isVerified) {
+         redirectAttr.addFlashAttribute("msg", "이메일 인증을 해주세요.");
+         return "redirect:/member/memberCreate.do";
+      }
 
-       if (bindingResult.hasErrors()) {
-           ObjectError error = bindingResult.getAllErrors().get(0);
-           redirectAttr.addFlashAttribute("msg", error.getDefaultMessage());
-           return "redirect:/member/memberCreate.do";
-       }
+      if (bindingResult.hasErrors()) {
+         ObjectError error = bindingResult.getAllErrors().get(0);
+         redirectAttr.addFlashAttribute("msg", error.getDefaultMessage());
+         return "redirect:/member/memberCreate.do";
+      }
 
-       String rawPassword = member.getPassword();
-       String encodedPassword = passwordEncoder.encode(rawPassword);
-       member.setPassword(encodedPassword);
-       
-       int memberId = memberService.createMember(member);
-       
-       if (memberId > 0) {
-           session.removeAttribute("emailVerified");
-           return "redirect:/member/memberCreateComplete.do";
-       } else {
-           return "redirect:/member/memberCreate.do";
+      String rawPassword = member.getPassword();
+      String encodedPassword = passwordEncoder.encode(rawPassword);
+      member.setPassword(encodedPassword);
+
+      int result = memberService.insertMember(member);
+
+      Point point = new Point();
+      point.setPointMemberId(member.getMemberId());
+      point.setPointCurrent(3000);
+      point.setPointType("회원가입");
+      point.setPointAmount(3000);
+      
+      int resultPoint = pointService.insertPoint(point);
+      
+       List<Coupon> resultCoupon = couponService.findCoupon();
+       for (Coupon coupon : resultCoupon) {
+           MemberCoupon memberCoupon = new MemberCoupon();
+           memberCoupon.setCouponId(coupon.getCouponId());
+           memberCoupon.setMemberId(member.getMemberId());
+
+           LocalDateTime issuanceDate = LocalDateTime.now();
+           LocalDateTime endDate = issuanceDate.plusMonths(1);
+           
+           memberCoupon.setCreateDate(issuanceDate); 
+           memberCoupon.setEndDate(endDate); 
+           memberCoupon.setUseStatus(0);
+
+           int memberInsertCoupon = couponService.insertDeliveryCoupon(memberCoupon);
+           
+           String to = memberCoupon.getMemberId();
+			Notification insertNotification = Notification.builder()
+					.notiCategory(3)
+					.notiContent("회원가입 배송비 할인 쿠폰이 발급됐습니다.")
+					.notiCreatedAt(formatTimestampNow())
+					.memberId(to) 
+					.build();
+			
+			notificationRepository.insertNotification(insertNotification);
+			Notification notification = notificationRepository.latestNotification();
+			simpMessagingTemplate.convertAndSend("/pet/notice/" + to, notification);
+           
        }
+      
+       Object obj = session.getAttribute("userAgreements");
+       Terms terms = new Terms();
+
+      if (obj instanceof HashMap) {
+         HashMap<Integer, Accept> userAgreements = (HashMap<Integer, Accept>) obj;
+
+         terms.setMemberId(member.getMemberId());
+
+         List<TermsHistory> findTermsHistory = termsService.fineTermsHistory();
+
+
+         for (TermsHistory th : findTermsHistory) {
+            terms.setHistoryId(th.getTermsId());
+            terms.setTermsId(th.getTermsId());
+            terms.setAccept(userAgreements.getOrDefault(th.getTermsId(), Accept.N));
+
+            int result2 = termsService.insertTerms(terms);
+         }
+
+         session.removeAttribute("terms");
+
+      } else {
+         redirectAttr.addFlashAttribute("msg", "약관에 동의해주세요.");
+         return "redirect:/member/terms.do";
+      }
+      session.removeAttribute("emailVerified");
+
+      return "redirect:/member/memberCreateComplete.do";
    }
    
-	public HashMap<Integer, Accept> fetchUserAgreements(HttpSession session) {
-	    Object obj = session.getAttribute("userAgreements");
-	    if (obj instanceof HashMap) {
-	        return (HashMap<Integer, Accept>) obj;
-	    }
-	    return new HashMap<>();
-	}
-
-	/**
+   /**
     * @author 전예라
     * 회원이 체크한 Y/N을 임시 세션에 저장
     */
@@ -290,8 +341,17 @@ public class MemberSecurityController {
    public void petUpdate() {
    }
    
+   // 알림 날짜변환메소드 (대원)
+   private String formatTimestamp(Timestamp timestamp) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
+        return dateFormat.format(timestamp);
+	}
+	// 알림 날짜변환메소드 (대원)
+	private String formatTimestampNow() {
+	    return formatTimestamp(new Timestamp(System.currentTimeMillis()));
+	}
+   
    /**
-    * @author 김담희
     * 멤버 구독자 업데이트 메소드
     */
    @PostMapping("/subscribe.do")

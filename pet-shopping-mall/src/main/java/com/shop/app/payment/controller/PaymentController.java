@@ -164,28 +164,95 @@ public class PaymentController {
 	 * (결제 취소 요청이 들어오거나 실패 시, 바로 delete 처리함)
 	 * 
 	 * @author 전예라
-	 * 포인트/쿠폰 사용과 포인트 적립 - 일반 1% / 구독자 3%, 포인트 사용하면 적립 안됨 (리팩토링)
+	 * 포인트/쿠폰 사용과 포인트 적립(일반 1% / 구독자 3%, 포인트 사용하면 적립 안됨)
 	 */
 	@ResponseBody
 	@PostMapping("/proceed.do")
 	public Map<String, Object> paymentProceed(@Valid @RequestBody OrderCreateDto _order) {
 		Map<String, Object> resultMap = new HashMap<>();
 		
-	    Boolean useCoupon = _order.getUseCoupon();
-	    Order order = _order.toOder();
-	    List<OrderDetail> orderDetails = _order.getForms();
-	    String memberId = _order.getMemberId();
-	    int pointsUsed = _order.getPointsUsed();
-	    Integer couponId = _order.getCouponId();
-		  
-	    int result = orderService.insertOrder(order, orderDetails, memberId, pointsUsed, couponId);
+		Boolean useCoupon = _order.getUseCoupon();
+		Order order = _order.toOder();
 
-	    String msg = "";
-	    if (result > 0) {
-	        msg = "주문에 성공하셨습니다.";
-	    } else {
-	        msg = "주문에 실패하셨습니다. 관리자에게 문의하세요.";
-	    }
+		List<OrderDetail> orderDetails = _order.getForms();
+
+		int pointsUsed = _order.getPointsUsed();
+
+		Point points = new Point();
+		points.setPointMemberId(_order.getMemberId());
+		Point currentPoints = pointService.findPointCurrentById(points);
+		
+		if(pointsUsed != 0) {
+
+		Point usedPoint = new Point();
+		usedPoint.setPointMemberId(_order.getMemberId());
+		usedPoint.setPointType("구매사용");
+		usedPoint.setPointAmount(-pointsUsed);
+
+	    int currentPoint = currentPoints.getPointCurrent();
+	    usedPoint.setPointCurrent(currentPoint - pointsUsed);
+
+		int usedPointResult = pointService.insertUsedPoint(usedPoint);
+		
+		}
+		
+		if (useCoupon) {
+			
+			int couponDiscount = _order.getCouponDiscount();
+	
+			MemberCoupon coupon = new MemberCoupon();
+			coupon.setMemberId(_order.getMemberId());
+			coupon.setCouponId(_order.getCouponId());
+			coupon.setMemberCouponId(_order.getMemberCouponId());
+			List<MemberCoupon> currentCoupons = couponService.findCouponCurrendById(coupon);
+			List<MemberCoupon> validCoupons = couponService.validateCoupon(_order.getCouponId(), 
+												_order.getMemberId(), _order.getMemberCouponId());
+	
+			if (validCoupons != null && !validCoupons.isEmpty()) { 
+			    MemberCoupon validCoupon = validCoupons.get(0); 
+			    validCoupon.setUseStatus(1);
+			    int usedCouponResult = couponService.updateCouponStatus(validCoupon);
+			    
+			    order.setMemberCouponId(validCoupon.getMemberCouponId());
+			} else {
+				order.setMemberCouponId(null);
+			}
+		}
+		  
+		int result = orderService.insertOrder(order, orderDetails);
+
+		String msg = "";
+
+		if (result > 0) {
+			msg = "주문에 성공하셨습니다.";
+
+			if (pointsUsed <= 0) {
+
+			    Member subscribeMember = memberService.findMemberById(order.getMemberId());
+			    boolean subscriber = (subscribeMember.getSubscribe() == Subscribe.Y);
+			    
+				int amount = order.getAmount();
+				double pointRate  = subscriber ? 0.03 : 0.01;
+				int pointAmount = (int) (amount * pointRate);
+
+				Point point = new Point();
+				point.setPointMemberId(order.getMemberId());
+				point.setPointType("구매적립");
+				point.setPointAmount(pointAmount);
+
+				Point currentPoints2 = pointService.findReviewPointCurrentById(point);
+
+				int updatedPointAmount = currentPoints.getPointCurrent() + pointAmount;
+
+				point.setPointCurrent(updatedPointAmount);
+
+				int pointResult = pointService.insertPoint(point);
+			}
+			
+		} else {
+			msg = "주문에 실패하셨습니다. 관리자에게 문의하세요.";
+			
+		}
 
 		resultMap.put("result", result);
 		resultMap.put("msg", msg);
@@ -230,6 +297,76 @@ public class PaymentController {
 		model.addAttribute("order", order);
 	}
 
+	/**
+	 * @author 전예라
+	 * 결제 중에 취소했을 때 사용했던 포인트, 쿠폰을 롤백 처리하는 메소드
+	 */
+	@PostMapping("/verifyAndHandleCancelledPayment/{imp_uid}")
+	@ResponseBody
+	public ResponseEntity<?> verifyAndHandleCancelledPayment(@Valid @RequestBody OrderCreateDto _order, 
+			@PathVariable(value = "imp_uid") String imp_uid) throws IamportResponseException, IOException {
+
+		IamportResponse<Payment> paymentResponse = iamportClient.paymentByImpUid(imp_uid);
+
+		if (paymentResponse == null || paymentResponse.getResponse() == null) {
+			return ResponseEntity.badRequest().body("결제 정보를 가져올 수 없습니다.");
+		}
+
+		Payment payment = paymentResponse.getResponse();
+		String orderUid = payment.getMerchantUid();
+
+		Order order = _order.toOder();
+
+		Order findOrder = orderService.findByOrder(order);
+
+		String memberId = _order.getMemberId();
+		int pointsUsed = findOrder.getDiscount();
+
+		if ("failed".equalsIgnoreCase(payment.getStatus())) {
+		    handleCancelledPayment(memberId, pointsUsed);
+
+		    List<MemberCoupon> usedCoupons = couponService.findUsedCouponsByMemberId(memberId);
+		    handleCancelledCouponRefund(usedCoupons);
+
+		    return ResponseEntity.ok("결제가 취소되었습니다.");
+		}
+
+		return ResponseEntity.ok(paymentResponse);
+	}
+
+	// 포인트 환불 처리 메소드
+	private void handleCancelledPayment(String memberId, int usedPoints) {
+		
+	    Point rollbackPoint = new Point();
+	    rollbackPoint.setPointMemberId(memberId);
+	    rollbackPoint.setPointType("구매취소");
+	    rollbackPoint.setPointAmount(usedPoints);
+
+	    Point currentPoints = pointService.findPointCurrentById(rollbackPoint);
+
+	    int currentPoint = currentPoints.getPointCurrent(); // 현재 포인트
+	    int earnedPoint = currentPoints.getPointAmount(); // 적립된 금액
+	    int netPoint = currentPoint - earnedPoint; // 적립된 금액을 제외한 실제 포인트
+
+	    rollbackPoint.setPointCurrent(netPoint);
+
+	    int pointRollback = pointService.insertRollbackPoint(rollbackPoint);
+
+	}
+	
+	// 쿠폰 환불 처리 메소드
+	private void handleCancelledCouponRefund(List<MemberCoupon> usedCoupons) {
+	    for (MemberCoupon coupon : usedCoupons) {
+	        
+	        coupon.setUseStatus(0);
+	        coupon.setUseDate(null);
+	  
+	        int updateCoupon = couponService.updateCoupon(coupon); 
+	    }
+	}
+	
+	
+	
 	@ResponseBody
 	@PostMapping("/startScheduler.do")
 	public ResponseEntity<?> startMembership(@RequestBody SubScheduleDto subScheduleDto, RedirectAttributes redirectAttr) {

@@ -22,8 +22,6 @@ import com.shop.app.common.HelloSpringUtils;
 import com.shop.app.common.controller.advice.MailSender;
 import com.shop.app.notification.entity.Notification;
 import com.shop.app.notification.repository.NotificationRepository;
-import com.shop.app.notification.service.NotificationService;
-import com.shop.app.notification.service.NotificationServiceImpl;
 import com.shop.app.servicecenter.inquiry.dto.AnswerCreateDto;
 import com.shop.app.servicecenter.inquiry.dto.AnswerUpdateDto;
 import com.shop.app.servicecenter.inquiry.dto.QuestionCreateDto;
@@ -52,7 +50,7 @@ public class AnswerController {
 	private MailSender mailSender;
 	
 	@Autowired
-	NotificationService notificationService;
+	NotificationRepository notificationRepository;
 	
 	@Autowired
 	SimpMessagingTemplate simpMessagingTemplate;
@@ -83,9 +81,18 @@ public class AnswerController {
 		Question question = Question.builder().questionId(questionId).build();
 		Question questions = questionService.findQuestionById(question);
 		
-		// 리팩토링 김대원(질문답변글 알림)
 		if (result > 0) {
-			int adminAnswerCreateNotification = notificationService.adminAnswerCreateNotification(questions);
+			String to = questions.getQuestionMemberId();
+			Notification insertNotification = Notification.builder()
+					.notiCategory(3)
+					.notiContent(questions.getQuestionTitle()+ " 질문에 답변이 달렸습니다.")
+					.notiCreatedAt(formatTimestampNow())
+					.memberId(to) 
+					.build();
+			
+			notificationRepository.insertNotification(insertNotification);
+			Notification notification = notificationRepository.latestNotification();
+			simpMessagingTemplate.convertAndSend("/pet/notice/" + to, notification);
 	    }
 		
 		return "redirect:/admin/adminQuestionDetail.do?questionId=" + questionId;

@@ -11,12 +11,6 @@ import org.springframework.boot.autoconfigure.info.ProjectInfoProperties.Build;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.shop.app.coupon.entity.MemberCoupon;
-import com.shop.app.coupon.repository.CouponRepository;
-import com.shop.app.coupon.service.CouponService;
-import com.shop.app.member.entity.Member;
-import com.shop.app.member.entity.Subscribe;
-import com.shop.app.member.repository.MemberRepository;
 import com.shop.app.order.dto.OrderAdminListDto;
 import com.shop.app.order.dto.OrderAdminProductStatisticsDto;
 import com.shop.app.order.dto.OrderAdminStatisticsByDateDto;
@@ -29,9 +23,6 @@ import com.shop.app.order.entity.OrderDetail;
 import com.shop.app.order.repository.OrderRepository;
 import com.shop.app.payment.entity.Payment;
 import com.shop.app.payment.repository.PaymentRepository;
-import com.shop.app.point.entity.Point;
-import com.shop.app.point.repository.PointRepository;
-import com.shop.app.point.service.PointService;
 
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -48,25 +39,14 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private OrderRepository orderRepository;
 	
-	@Autowired
-	private PointService pointService;
 	
-	@Autowired
-	private CouponService couponService;
-	
-	@Autowired
-	private MemberRepository memberRepository;
 
 	/**
 	 * @author 김담희
 	 * 주문 테이블과 주문 상세 테이블에 내역 저장
-	 * 
-	 * @author 전예라
-	 * 포인트/쿠폰 사용과 포인트 적립 - 일반 1% / 구독자 3%, 포인트 사용하면 적립 안됨 (리팩토링)
 	 */
 	@Override
-	@Transactional
-	public int insertOrder(Order order, List<OrderDetail> orderDetails, String memberId, int pointsUsed, Integer couponId) {
+	public int insertOrder(Order order, List<OrderDetail> orderDetails) {
 		int result = 0;
 		result = orderRepository.insertOrder(order);
 		int orderId = order.getOrderId();
@@ -75,53 +55,7 @@ public class OrderServiceImpl implements OrderService {
 			orderDetail.setOrderId(orderId);
 			result = orderRepository.insertOrderDetail(orderDetail);
 		}
-		
-		// 포인트 사용 처리
-	    if (pointsUsed > 0) {
-	        Point usedPoint = new Point();
-	        usedPoint.setPointMemberId(memberId);
-	        usedPoint.setPointType("구매사용");
-	        usedPoint.setPointAmount(-pointsUsed);
-	        
-	    	Point points = new Point();
-			points.setPointMemberId(memberId);
-	        Point currentPoints = pointService.findPointCurrentById(points);
-	        usedPoint.setPointCurrent(currentPoints.getPointCurrent() - pointsUsed);
-	        
-	        pointService.insertUsedPoint(usedPoint);
-	    }
-
-	    // 쿠폰 사용 처리
-	    if (couponId != null) {
-	        MemberCoupon coupon = new MemberCoupon();
-	        coupon.setMemberId(memberId);
-	        coupon.setCouponId(couponId);
-	        coupon.setUseStatus(1);
-	        
-	        couponService.updateCouponStatus(coupon);
-	    }
-
-	    // 포인트 적립 처리 (포인트를 사용한 경우에는 적립하지 않음)
-	    if (pointsUsed <= 0) {
-	        Member subscribeMember = memberRepository.findMemberById(memberId);
-	        boolean subscriber = (subscribeMember.getSubscribe() == Subscribe.Y);
-
-	        int amount = order.getAmount();
-	        double pointRate = subscriber ? 0.03 : 0.01;
-	        int pointAmount = (int) (amount * pointRate);
-
-	        Point point = new Point();
-	        point.setPointMemberId(memberId);
-	        point.setPointType("구매적립");
-	        point.setPointAmount(pointAmount);
-
-	        Point currentPoints = pointService.findReviewPointCurrentById(point);
-	        point.setPointCurrent(currentPoints.getPointCurrent() + pointAmount);
-
-	        pointService.insertPoint(point);
-	    }
-
-	    return result;
+		return result;
 	}
 
 	
@@ -241,42 +175,9 @@ public class OrderServiceImpl implements OrderService {
 	}
 	
 
-	/**
-	 * @author 전예라
-	 * 결제창이 넘어가기 전에 취소하면 사용했던 포인트, 쿠폰 롤백 (리팩토링)
-	 */
 	@Override
-	public int deleteOrder(String orderNo, String memberId, Integer pointsUsed, Integer couponId) {
-		int result = orderRepository.deleteOrder(orderNo);
-		
-		// 포인트 롤백
-        if (pointsUsed != null) {
-            Point rollbackPoint = new Point();
-            rollbackPoint.setPointMemberId(memberId);
-            rollbackPoint.setPointType("구매취소");
-            rollbackPoint.setPointAmount(pointsUsed);
-
-            Point currentPoints = pointService.findPointCurrentById(rollbackPoint);
-            int currentPoint = currentPoints.getPointCurrent();
-            int earnedPoint = currentPoints.getPointAmount();
-            int netPoint = currentPoint - earnedPoint;
-            rollbackPoint.setPointCurrent(netPoint);
-            
-            pointService.insertRollbackPoint(rollbackPoint);
-        }
-
-        // 쿠폰 롤백
-        if (couponId != null) {
-            MemberCoupon coupon = new MemberCoupon();
-            coupon.setCouponId(couponId);
-            coupon.setMemberId(memberId);
-            coupon.setUseStatus(0);
-            coupon.setUseDate(null);
-
-            couponService.updateCoupon(coupon);
-        }
-
-        return result;
+	public int deleteOrder(String orderNo) {
+		return orderRepository.deleteOrder(orderNo);
 	}
 	
 
@@ -302,6 +203,9 @@ public class OrderServiceImpl implements OrderService {
 		
 		return orderList;
 	}
+	
+	
+	
 
 	@Override
 	public Order findOrderByOrderNo(String orderNo) {

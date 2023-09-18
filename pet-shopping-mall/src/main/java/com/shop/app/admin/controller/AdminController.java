@@ -122,6 +122,15 @@ public class AdminController {
 	@GetMapping("/adminMemberList.do")
 	public void adminMemberList(Model model) {
 		List<MemberDetails> members = adminService.adminMemberList();
+		
+		// EnumTypeHandler 사용하여 enum 값 매핑
+	    for (MemberDetails member : members) {
+	        
+	        String subscribeString = member.getSubscribe().toString(); 
+	        Subscribe subscribe = Subscribe.valueOf(subscribeString); 
+	        
+	        member.setSubscribe(subscribe);
+	    }
 	    int totalCount = adminService.findTotalAdminCount();
 		model.addAttribute("totalCount", totalCount);
 		model.addAttribute("members", members);
@@ -134,10 +143,22 @@ public class AdminController {
 	@GetMapping("/adminSubscribeList.do")
 	public void adminSubscribeList(Model model) {
 		List<MemberDetails> subscribedMembers = adminService.adminSubscribeList();
+		
+		// EnumTypeHandler 사용하여 enum 값 매핑
+	    for (MemberDetails subscribedMember : subscribedMembers) {
+	        
+	        String subscribeString = subscribedMember.getSubscribe().toString(); 
+	        Subscribe subscribe = Subscribe.valueOf(subscribeString); 
+	        
+	        subscribedMember.setSubscribe(subscribe);
+	    }
+	    
 	    int totalCount = adminService.findTotalubscribeCount();
+		
 		model.addAttribute("totalCount", totalCount);
 		model.addAttribute("subscribedMembers", subscribedMembers);
 	}
+	
 
 	/**
 	 *  관리자 1:1 문의 전체 내역 조회 + 페이징바
@@ -194,6 +215,8 @@ public class AdminController {
 	/**
 	 *  관리자 1:1 문의 제목, 내용 검색
 	 * @author 전예라
+	 * @param searchKeyword
+	 * @param model
 	 * @return
 	 */
 	@GetMapping("/adminQuestionSearch.do")
@@ -226,6 +249,13 @@ public class AdminController {
 	        Model model) {
 	    if (searchKeyword != null && !searchKeyword.isEmpty()) {
 	        List<MemberDetails> members = adminService.adminMemberSearchByNameOrId(searchKeyword);
+	        
+	        for (MemberDetails member : members) {
+		        String subscribeString = member.getSubscribe().toString(); 
+		        Subscribe subscribe = Subscribe.valueOf(subscribeString);
+		        
+		        member.setSubscribe(subscribe);
+		    }
 			model.addAttribute("members", members);
 	    }
 	    int totalCount = adminService.findTotalAdminCount();
@@ -242,8 +272,21 @@ public class AdminController {
 	public String adminSubscribeSearchByNameOrId(
 	        @RequestParam(required = false) String searchKeyword,
 	        Model model) {
+		
 	    if (searchKeyword != null && !searchKeyword.isEmpty()) {
-	        List<MemberDetails> subscribedMembers = adminService.adminSubscribeSearchByNameOrId(searchKeyword);
+	        List<MemberDetails> members = adminService.adminSubscribeSearchByNameOrId(searchKeyword);
+	        List<MemberDetails> subscribedMembers = new ArrayList<>();
+	        for (MemberDetails member : members) {
+		        
+		        String subscribeString = member.getSubscribe().toString(); 
+		        Subscribe subscribe = Subscribe.valueOf(subscribeString);
+		        
+		        member.setSubscribe(subscribe);
+	        
+		        if (member.getSubscribe() == Subscribe.Y) {
+	                subscribedMembers.add(member);
+		        }
+	        }
 	        model.addAttribute("subscribedMembers", subscribedMembers);
 	    }
 	    int totalCount = adminService.findTotalubscribeCount();
@@ -293,6 +336,9 @@ public class AdminController {
 		return "admin/adminOrderList";
 	}
 	
+	
+
+	
 	/**
 	 * @author 김대원
 	 * 상품별 판매량 통계 조회
@@ -304,6 +350,7 @@ public class AdminController {
 		List<OrderAdminProductStatisticsDto> priceStatistics = orderService.adminStatisticsPrice();
 		model.addAttribute("priceStatistics", priceStatistics);
 	}
+	
 	
 	/**
 	 * @author 김대원

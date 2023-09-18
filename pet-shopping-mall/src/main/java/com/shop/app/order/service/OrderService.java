@@ -6,7 +6,6 @@ import java.util.Map;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 
 import com.shop.app.order.dto.OrderAdminListDto;
 import com.shop.app.order.dto.OrderAdminProductStatisticsDto;
@@ -22,7 +21,7 @@ import com.shop.app.payment.entity.Payment;
 
 public interface OrderService {
 
-	int insertOrder(Order order, List<OrderDetail> orderDetails, String memberId, int pointsUsed, Integer couponId);
+	int insertOrder(Order order, List<OrderDetail> orderDetails);
 
 	// 관리자페이지 주문조회(대원)
 	List<OrderAdminListDto> adminOrderList();
@@ -61,7 +60,7 @@ public interface OrderService {
 	// 관리자페이지 날짜별매출통계 조회 - 월별(대원)
 	List<OrderAdminStatisticsByDateDto> adminStatisticsByMonthly();
 
-	int deleteOrder(String orderNo, String memberId, Integer pointsUsed, Integer couponId);
+	int deleteOrder(String orderNo);
 
 	List<Map<OrderHistoryDto, Payment>> getOrderDetail(String orderNo);
 
@@ -84,5 +83,6 @@ public interface OrderService {
 	int findTotalOrderCount(String memberId);
 
 	int findTotalCancelOrderCount(String memberId);
+
 
 }

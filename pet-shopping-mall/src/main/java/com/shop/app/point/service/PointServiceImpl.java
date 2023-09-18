@@ -7,20 +7,13 @@ import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.shop.app.notification.repository.NotificationRepository;
-import com.shop.app.notification.service.NotificationService;
-import com.shop.app.notification.service.NotificationServiceImpl;
 import com.shop.app.point.entity.Point;
 import com.shop.app.point.repository.PointRepository;
-import com.shop.app.review.dto.ReviewCreateDto;
 import com.shop.app.review.entity.ReviewDetails;
 
 @Service
 public class PointServiceImpl implements PointService {
 
-	@Autowired
-	NotificationService notificationService;
-	
 	@Autowired
 	private PointRepository pointRepository;
 	
@@ -78,38 +71,4 @@ public class PointServiceImpl implements PointService {
 	public int findTotalPointCount(String pointMemberId) {
 		return pointRepository.findTotalPointCount(pointMemberId);
 	}
-	
-	
-    /**
-     * @author 전예라
-     * 리뷰 작성 시 텍스트 500원, 사진 1,000원 적립 (리팩토링)
-     * 
-     * @author 김대원
-     * 리뷰 작성 시 실시간 알림 (리팩토링)
-     */
-    @Override
-    public void handleReviewPoints(ReviewCreateDto _review, boolean hasImage) {
-        Point point = new Point();
-        point.setPointMemberId(_review.getReviewMemberId());
-
-        Point currentPoints = findReviewPointCurrentById(point); 
-
-        int pointAmount = 500;
-        if (hasImage) {
-            pointAmount += 500;
-        }
-
-        int updatedPointAmount = currentPoints.getPointCurrent() + pointAmount;
-
-        Point newPoint = new Point();
-        newPoint.setPointCurrent(updatedPointAmount);
-        newPoint.setPointAmount(pointAmount);
-        newPoint.setPointType("리뷰적립");
-        newPoint.setPointMemberId(_review.getReviewMemberId());
-
-        int newPointResult = insertPoint(newPoint);
-        
-		// 리팩토링 김대원(리뷰 적립금 알림)
-        int reviewCreateNotification = notificationService.reviewCreateNotification(newPoint);
-    }
 }

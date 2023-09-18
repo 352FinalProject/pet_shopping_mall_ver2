@@ -1,7 +1,6 @@
 package com.shop.app.member.dto;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -9,8 +8,6 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
 
 import org.springframework.format.annotation.DateTimeFormat;
-
-import com.shop.app.terms.entity.Accept;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,8 +43,6 @@ public class MemberCreateDto {
 	private boolean isPromotion;
 
 	public void setPoint(int i){}
-	
-	private HashMap<Integer, Accept> userAgreements;
 
 	
 }

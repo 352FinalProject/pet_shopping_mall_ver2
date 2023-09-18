@@ -3,9 +3,6 @@ package com.shop.app.member.service;
 
 import java.util.Map;
 
-import javax.servlet.http.HttpSession;
-import javax.validation.Valid;
-
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 
@@ -43,8 +40,6 @@ public interface MemberService extends UserDetailsService {
 	int updateCancelSubscribers();
 
 	MypageDto getMyPage(String memberId);
-
-	int createMember(MemberCreateDto member);
 
 
 }

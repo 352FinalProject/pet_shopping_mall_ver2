@@ -44,8 +44,6 @@ import com.shop.app.order.entity.Order;
 import com.shop.app.member.entity.MemberDetails;
 import com.shop.app.notification.entity.Notification;
 import com.shop.app.notification.repository.NotificationRepository;
-import com.shop.app.notification.service.NotificationService;
-import com.shop.app.notification.service.NotificationServiceImpl;
 import com.shop.app.order.dto.OrderHistoryDto;
 import com.shop.app.order.service.OrderService;
 import com.shop.app.payment.entity.Payment;
@@ -82,26 +80,26 @@ public class ReviewController {
 
 	@Autowired
 	private PointService pointService;
-
+	
 	@Autowired
 	private PetService petService;
-
+	
 	@Autowired
 	private ProductService productService;
-
+	
 	@Autowired
 	private OrderService orderService;
-
+	
 	@Autowired
 	private ServletContext application;
 
 	@Autowired
-	NotificationService notificationService;
-
+	NotificationRepository notificationRepository;
+	
 	@Autowired
 	SimpMessagingTemplate simpMessagingTemplate;
 
-
+	
 	/**
 	 * @author 혜령
 	 * - 내가 쓴 리뷰 조회 페이지 불러오기 + 페이징바
@@ -117,7 +115,7 @@ public class ReviewController {
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String reviewMemberId = authentication.getName();
-
+		
 		// 리뷰 작성자가 주문한 상품 내역들
 		List<OrderReviewListDto> orders = orderService.findOrdersByReviewId(reviewMemberId);
 
@@ -127,14 +125,14 @@ public class ReviewController {
 				"reviewMemberId", reviewMemberId,
 				"orders", orders
 				);
-
+		
 		int totalCount = reviewService.findTotalReviewCount(reviewMemberId);
 		int totalPages = (int) Math.ceil((double) totalCount / limit);
 		model.addAttribute("totalPages", totalPages);
 
 		// 리뷰에 보여줄 내용들
 		List<ReviewListDto> reviews = reviewService.findReviewAll(params);
-
+		
 		model.addAttribute("reviews", reviews);
 	}
 
@@ -148,11 +146,11 @@ public class ReviewController {
 			@RequestParam("productId") int productId, 
 			@RequestParam("orderId") int orderId, 
 			Model model) {
-
+		
 		model.addAttribute("productDetailId", productDetailId);
 		model.addAttribute("productId", productId);
 		model.addAttribute("orderId", orderId);
-
+	   
 	}
 
 	/**
@@ -160,8 +158,10 @@ public class ReviewController {
 	 * 리뷰 작성
 	 * 
 	 * @author 전예라
-	 * 리뷰 작성 시 텍스트 500원, 사진 1000원 포인트 적립 (리팩토링)
+	 * 리뷰 작성 시 텍스트 500원, 사진 1000원 포인트 적립
 	 * 
+	 * @author 김대원
+	 * 리뷰 작성 시 회원에게 포인트 적립 알림
 	 */
 	@PostMapping("/reviewCreate.do")
 	public String reviewCreate(
@@ -180,13 +180,13 @@ public class ReviewController {
 
 		// 이미지 상대경로 지정
 		String saveDirectory = application.getRealPath("/resources/upload/review");
-
+		
 		for(MultipartFile upFile : upFiles) {
 			if(!upFile.isEmpty()) {
 				String imageOriginalFilename = upFile.getOriginalFilename();
 				String imageRenamedFilename = HelloSpringUtils.getRenameFilename(imageOriginalFilename);
 				File destFile = new File(saveDirectory, imageRenamedFilename);
-
+				
 				upFile.transferTo(destFile);
 
 				int imageType = 1;
@@ -204,15 +204,73 @@ public class ReviewController {
 				hasImage = true;
 			}
 		}
+		
+		// 2. db저장
+		ReviewDetails reviews = ReviewDetails.builder()
+				.reviewId(_review.getReviewId())
+				.petId(pet.getPetId())
+				.orderId(_review.getOrderId())
+				.productId(_review.getProductId())
+				.productDetailId(_review.getProductDetailId())
+				.reviewMemberId(_review.getReviewMemberId())
+				.reviewStarRate(_review.getReviewStarRate())
+				.reviewTitle(_review.getReviewTitle())
+				.reviewContent(_review.getReviewContent())
+				.attachments(attachments)
+				.build();
+		
+		// petId 연결하기
+		// petId 로그인 멤버 말고 리뷰작성자랑 연결하기
+		String memberId = _review.getReviewMemberId();
+		List<Pet> petInfo = petService.findPetsByMemberId(memberId); // 리뷰작성자의 펫정보 가져오기
+		
+		if (!petInfo.isEmpty()) { // 펫정보가 비어있지 않다면
+			Pet firstPet = petInfo.get(0); // 첫번째 Pet 객체 가져오기
+			reviews.setPetId(firstPet.getPetId()); // db에 pet정보 저장
+		} else {
+			reviews.setPetId(null);
+		}
+			
+	
+		int reviewId = reviewService.insertReview(reviews);
+		int orderId = reviews.getOrderId();
+		int productDetailId = reviews.getProductDetailId();
+		String reviewMemberId = reviews.getReviewMemberId();
+		
+		ReviewDetailDto pointReviewId = reviewService.findReviewId(reviews.getReviewId());
 
-		// 리뷰내용, 사진, 펫정보 db저장   
-		Review review = reviewService.createReview(_review, attachments, pet);
-		int reviewId = reviewService.insertReview(review);
+		point.setPointMemberId(_review.getReviewMemberId());
+		point.setReviewId(_review.getReviewId());
 
-		ReviewDetailDto pointReviewId = reviewService.findReviewId(review.getReviewId());
+		Point currentPoints = pointService.findReviewPointCurrentById(point); 
 
-		// 포인트 처리
-		pointService.handleReviewPoints(_review, hasImage);
+		int pointAmount = 500;
+		if (hasImage) {
+			pointAmount += 500;
+		}
+
+		int updatedPointAmount = currentPoints.getPointCurrent() + pointAmount;
+
+		Point newPoint = new Point();
+		newPoint.setPointCurrent(updatedPointAmount); 
+		newPoint.setPointAmount(pointAmount); 
+		newPoint.setPointType("리뷰적립");
+		newPoint.setPointMemberId(_review.getReviewMemberId());
+		newPoint.setReviewId(pointReviewId.getReviewId());
+
+		int newPointResult = pointService.insertPoint(newPoint);
+		
+		String to = newPoint.getPointMemberId();
+		Notification insertNotification = Notification.builder()
+				.notiCategory(3)
+				.notiContent("리뷰 작성 포인트가 적립되었습니다.")
+				.notiCreatedAt(formatTimestampNow())
+				.memberId(to) 
+				.build();
+		
+		notificationRepository.insertNotification(insertNotification);
+		Notification notification = notificationRepository.latestNotification();
+		simpMessagingTemplate.convertAndSend("/pet/notice/" + to, notification);
 
 		return "redirect:/review/reviewList.do";
 	}
@@ -222,11 +280,30 @@ public class ReviewController {
 	 * 리뷰 삭제
 	 * 
 	 * @author 전예라
-	 * 리뷰 삭제 시 적립된 포인트 반환 (리팩토링)
+	 * 리뷰 삭제 시 적립된 포인트 반환
 	 */
 	@PostMapping("/reviewDelete.do")
 	public String reviewDelete(@RequestParam int reviewId) {
-		reviewService.deleteReviewAndRollbackPoints(reviewId);
+
+		Point earnedPoint = pointService.getPointByReviewId(reviewId);
+
+		if (earnedPoint != null) {
+			Point currentPoints = pointService.findReviewPointCurrentById(earnedPoint); 
+			int updatedPointAmount = currentPoints.getPointCurrent() - earnedPoint.getPointAmount();
+
+			Point rollbackPoint = new Point();
+			rollbackPoint.setPointCurrent(updatedPointAmount);
+			rollbackPoint.setPointAmount(-earnedPoint.getPointAmount());
+			rollbackPoint.setPointType("리뷰삭제");
+			rollbackPoint.setPointMemberId(earnedPoint.getPointMemberId());
+			rollbackPoint.setReviewId(reviewId);
+
+			int rollbackResult = pointService.insertRollbackPoint(rollbackPoint);
+		}
+
+		// 리뷰 삭제
+		int result = reviewService.reviewDelete(reviewId);
+
 		return "redirect:/review/reviewList.do";
 	}
 
@@ -241,18 +318,18 @@ public class ReviewController {
 			Model model, 
 			Pet pet, 
 			Principal principal) {
-
+		
 		ReviewDetailDto reviews = reviewService.findReviewId(reviewId);
 		model.addAttribute("reviews", reviews);
-
+		
 		// 이미지 파일 정보 조회
 		ReviewDetails reviewDetails = reviewService.findImageAttachmentsByReviewId(reviewId);
 		model.addAttribute("reviewDetails", reviewDetails);
-
+		
 		// 구매한 상품 정보 조회
 		ReviewProductDto reviewProduct = reviewService.findProductReviewId(reviewId);
 		model.addAttribute("reviewProduct", reviewProduct);
-
+		
 	}
 
 
@@ -277,17 +354,17 @@ public class ReviewController {
 
 		Review reviews = _review.toReview();
 		int result = reviewService.updateReview(reviews);
-
+		
 		return "redirect:/review/reviewDetail.do?reviewId=" + reviews.getReviewId();
 
 	}
 
 	private String formatTimestamp(Timestamp timestamp) {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
-		return dateFormat.format(timestamp);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
+        return dateFormat.format(timestamp);
 	}
 	private String formatTimestampNow() {
-		return formatTimestamp(new Timestamp(System.currentTimeMillis()));
+	    return formatTimestamp(new Timestamp(System.currentTimeMillis()));
 	}
 
 }
