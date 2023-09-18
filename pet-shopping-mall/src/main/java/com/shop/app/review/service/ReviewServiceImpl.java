@@ -286,6 +286,12 @@ public class ReviewServiceImpl implements ReviewService {
         // 리뷰 삭제
         int result = this.reviewDelete(reviewId);
     }
+    
+    // 리뷰의 총 개수와 평균 별점 한번에 하기 (예라, 리팩토링)
+    @Override
+    public ProductReviewAvgDto findProductReviewAllAndCount(int productId) {
+    	return reviewRepository.findProductReviewAllAndCount(productId);
+    }
 
 
 }

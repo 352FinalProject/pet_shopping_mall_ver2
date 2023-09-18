@@ -1,5 +1,7 @@
 package com.shop.app.pet.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +13,8 @@ import com.shop.app.pet.dto.PetCreateDto;
 import com.shop.app.pet.dto.PetUpdateDto;
 import com.shop.app.pet.entity.Pet;
 import com.shop.app.pet.repository.PetRepository;
+import com.shop.app.review.dto.ReviewDetailDto;
+import com.shop.app.review.entity.Review;
 import com.shop.app.servicecenter.inquiry.entity.Question;
 import com.shop.app.servicecenter.inquiry.service.QuestionServiceImpl;
 
@@ -65,9 +69,30 @@ public class PetServiceImpl implements PetService {
 		return petRepository.findProductRevicePet(memberId);
 	}
 
+//	@Override
+//	public List<Pet> findReviewPetByMemberId(String reviewMemberId) {
+//		return petRepository.findReviewPetByMemberId(reviewMemberId);
+//	}
+
 	@Override
-	public List<Pet> findReviewPetByMemberId(String reviewMemberId) {
-		return petRepository.findReviewPetByMemberId(reviewMemberId);
+	public Map<Integer, List<Pet>> findPetsMapByReviews(List<Review> reviews) {
+		
+		int productId = reviews.get(0).getProductId(); 
+		
+		List<ReviewDetailDto> results = petRepository.findReviewsAndPetsByProductId(productId);
+		
+		Map<Integer, List<Pet>> reviewPetsMap = new HashMap<>();
+		
+		for (ReviewDetailDto result : results) {
+	        int reviewId = result.getReviewId();
+	        Pet pet = result.toPet();
+	        log.debug("pet = {} ", pet);
+	     // map에 pet 정보 추가
+	        reviewPetsMap.computeIfAbsent(reviewId, k -> new ArrayList<>()).add(pet);
+		
+		}
+		return reviewPetsMap;
+		
 	}
 
 }

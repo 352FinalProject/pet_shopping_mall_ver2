@@ -115,10 +115,25 @@
 	    p.product_id, p.product_name
 	</select>
 	
+	<select id="findProductReviewAllAndCount" resultMap="productReviewAvgDto">
+	select 
+	    p.product_id, 
+	    count(*),
+	    round(avg(r.review_star_rate), 1) as avg
+	from 
+	    product p
+	join 
+	    review r on p.product_id = r.product_id
+	where 
+	    p.product_id = #{productId}
+	group by 
+	    p.product_id, p.product_name
+	</select>
+	
 <resultMap type="ProductReviewAvgDto" id="productReviewAvgDto">
     <result column="product_id" property="productId" />
     <result column="product_name" property="productName" />
-    <result column="AVG" property="reviewStarRate" />
+    <result column="avg" property="reviewStarRate" />
 </resultMap>
 	
 	<select id="findReviewAll" resultType="ReviewListDto">

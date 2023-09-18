@@ -53,12 +53,12 @@
                      <img
                         src="${pageContext.request.contextPath}/resources/images/상품/star.png"
                         alt="별점" />
-                     <c:if test="${productReviewStarAvg.reviewStarRate == null}">
+                     <c:if test="${reviewPageInfo.reviewStarRate == null}">
                         <span>0.0</span>
                         <span>&nbsp;|&nbsp;</span>
                      </c:if>
-                     <c:if test="${productReviewStarAvg.reviewStarRate != null}">
-                        <span>${productReviewStarAvg.reviewStarRate}</span>
+                     <c:if test="${reviewPageInfo.reviewStarRate != null}">
+                        <span>${reviewPageInfo.reviewStarRate}</span>
                         <span>&nbsp;|&nbsp;</span>
                      </c:if>
                      <span><a href="#product-review-box">후기
@@ -194,19 +194,19 @@
            </c:if>
          <c:if test="${not empty reviews}">
          <div class="review-avg-star">
-            <c:if test="${productReviewStarAvg.reviewStarRate == null}">
+            <c:if test="${reviewPageInfo.reviewStarRate == null}">
                <div>0.0</div>
                <div>☆☆☆☆☆</div> 
              </c:if>
-            <c:if test="${productReviewStarAvg.reviewStarRate != null}">
-                <div>${productReviewStarAvg.reviewStarRate}</div>
+            <c:if test="${reviewPageInfo.reviewStarRate != null}">
+                <div>${reviewPageInfo.reviewStarRate}</div>
                 <div class="review-avg-star2">
                  <c:choose>
-                     <c:when test="${productReviewStarAvg.reviewStarRate >= 4.5}">★★★★★</c:when>
-                     <c:when test="${productReviewStarAvg.reviewStarRate >= 3.5}">★★★★☆</c:when>
-                     <c:when test="${productReviewStarAvg.reviewStarRate >= 2.5}">★★★☆☆</c:when>
-                     <c:when test="${productReviewStarAvg.reviewStarRate >= 1.5}">★★☆☆☆</c:when>
-                     <c:when test="${productReviewStarAvg.reviewStarRate >= 0.1}">★☆☆☆☆</c:when>
+                     <c:when test="${reviewPageInfo.reviewStarRate >= 4.5}">★★★★★</c:when>
+                     <c:when test="${reviewPageInfo.reviewStarRate >= 3.5}">★★★★☆</c:when>
+                     <c:when test="${reviewPageInfo.reviewStarRate >= 2.5}">★★★☆☆</c:when>
+                     <c:when test="${reviewPageInfo.reviewStarRate >= 1.5}">★★☆☆☆</c:when>
+                     <c:when test="${reviewPageInfo.reviewStarRate >= 0.1}">★☆☆☆☆</c:when>
                      <c:otherwise>☆☆☆☆☆</c:otherwise>
                  </c:choose>
                 </div>

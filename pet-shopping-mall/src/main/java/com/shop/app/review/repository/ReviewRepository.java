@@ -106,6 +106,8 @@ public interface ReviewRepository {
 	ReviewDetails findProductImageAttachmentsByReviewId2(@Param("reviewId")int reviewId2, @Param("orderId")int orderId);
 //	ReviewDetails findProductImageAttachmentsByReviewId2(int reviewId2);
 
+	ProductReviewAvgDto findProductReviewAllAndCount(int productId);
+
 	
 	
 	

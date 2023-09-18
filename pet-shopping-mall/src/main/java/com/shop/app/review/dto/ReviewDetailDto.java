@@ -23,6 +23,8 @@ public class ReviewDetailDto {
 	private int reviewStarRate;
 	private LocalDateTime reviewCreatedAt;
 	
+	private String memberId;
+	
 	public Review toReview() {
 		return Review.builder()
 				.reviewId(reviewId)
@@ -40,6 +42,7 @@ public class ReviewDetailDto {
 	private String petBreed;
 	private String petWeight;
 	private PetGender petGender;
+	private String petKind;
 	
 	public Pet toPet() {
 		return Pet.builder()
@@ -48,8 +51,13 @@ public class ReviewDetailDto {
 				.petAge(petAge)
 				.petBreed(petBreed)
 				.petWeight(petWeight)
+				.petKind(petKind)
 				.petGender(petGender)
 				.build();
+	}
+	
+	public Pet getPet() {
+	    return this.toPet();
 	}
 	
 	private int productId;

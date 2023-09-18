@@ -84,8 +84,7 @@ public interface ReviewService {
 
 	void deleteReviewAndRollbackPoints(int reviewId);
 
-
-
+	ProductReviewAvgDto findProductReviewAllAndCount(int productId);
 
 
 //	List<ReviewDetailDto> findProductReviewDetails(List<Review> reviews);

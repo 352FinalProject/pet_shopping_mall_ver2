@@ -13,5 +13,10 @@ public class ProductReviewAvgDto {
 	
 	private String productName; // product
 	private int productId; // product
+	private long totalCount;
 	private double reviewStarRate; // review
+	
+	public long getTotalCount() {
+		return totalCount;
+	}
 }

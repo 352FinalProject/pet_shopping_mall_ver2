@@ -19,10 +19,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class StopwatchAspect {
 
-	@Pointcut("execution(* com.shop.app..*Controller.create*(..))")
+	@Pointcut("execution(* com.shop.app..*Controller.productDetail*(..))")
 	public void pointcut() {}
 	
-	@Around("pointcut()")
+	@Around("execution(* com.shop.app..*Controller.*(..))")
 	public Object advice(ProceedingJoinPoint joinPoint) throws Throwable {
 		// 조인포인트 실행전 Start
 		StopWatch stopwatch = new StopWatch();
