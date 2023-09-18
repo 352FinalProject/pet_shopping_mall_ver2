@@ -23,6 +23,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StopWatch;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,6 +44,7 @@ import com.shop.app.pet.entity.Pet;
 import com.shop.app.pet.service.PetService;
 import com.shop.app.product.dto.ProductCreateDto;
 import com.shop.app.product.dto.ProductInfoDto;
+import com.shop.app.product.dto.ProductReviewPetInfoDto;
 import com.shop.app.product.dto.ProductSearchDto;
 import com.shop.app.product.entity.Product;
 import com.shop.app.product.entity.ProductCategory;
@@ -89,6 +91,9 @@ public class ProductController {
 	public void productDetail(@RequestParam int productId, @RequestParam(defaultValue = "1") int page,
 			@AuthenticationPrincipal MemberDetails member, Model model) {
 
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+		
 		int limit = 3;
 
 		Map<String, Object> params = Map.of("page", page, "limit", limit, "productId", productId);
@@ -96,14 +101,16 @@ public class ProductController {
 		int totalCount = reviewService.findProductTotalReviewCount(productId);
 
 		int totalPages = (int) Math.ceil((double) totalCount / limit);
-		model.addAttribute("totalPages", totalPages);
+		model.addAttribute("totalPages", totalPages); 
 
+		
 		// 상품Id에 대한 모든 리뷰 가져오기 (이혜령)
 		List<Review> reviews = reviewService.findProductReviewAll(params, productId);
 		model.addAttribute("reviews", reviews);
 
+
 		// 리뷰 평균 별점에 대한 퍼센트 구하기 (이혜령)
-		List<Review> allReviews = reviewService.findProductReviewAllNoPageBar(productId);
+		List<Review> allReviews = reviewService.findProductReviewAllStarPercent(productId);
 
 		int[] starCounts = new int[6];
 		for (Review review : allReviews) {
@@ -155,9 +162,9 @@ public class ProductController {
 		model.addAttribute("productDetails", productDetails); 
 
 		// 상품 상세 페이지 리뷰 - 펫 정보  (이혜령)
-		Map<Integer, List<Pet>> reviewPetsMap = new HashMap<>();
+		Map<Integer, List<ProductReviewPetInfoDto>> reviewPetsMap = new HashMap<>();
 		for (Review review : reviews) {
-			List<Pet> pets = petService.findReviewPetByMemberId(review.getReviewMemberId());
+			List<ProductReviewPetInfoDto> pets = petService.findReviewPetByMemberId(review.getReviewMemberId());
 			reviewPetsMap.put(review.getReviewId(), pets);
 		}
 
@@ -199,6 +206,11 @@ public class ProductController {
 		if (member != null) {
 			model.addAttribute("likeState", wishlistService.getLikeProduct(productId, member.getMemberId()));
 		}
+		
+		stopWatch.stop();
+		System.out.println(stopWatch.prettyPrint());
+		System.out.println("리팩토링 시간 단축하기(s):" + stopWatch.getTotalTimeSeconds()); 
+		
 	}
 
 	/**

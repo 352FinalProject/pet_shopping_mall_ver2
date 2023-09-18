@@ -154,7 +154,7 @@ public class ProductServiceImpl implements ProductService {
 		List<ProductSearchDto> productList = productRepository.searchProducts(searchQuery);
 		
 		for(ProductSearchDto p : productList) {
-			int cnt = reviewRepository.findProductListReviewTotalCount(p.getProductId());
+			int cnt = reviewRepository.findReviewTotalCount(p.getProductId());
 			p.setReviewCnt(cnt);
 		}
 		return productList;

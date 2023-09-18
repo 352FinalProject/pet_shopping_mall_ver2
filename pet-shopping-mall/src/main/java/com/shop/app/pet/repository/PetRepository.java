@@ -12,6 +12,7 @@ import org.apache.ibatis.session.RowBounds;
 import com.shop.app.pet.dto.PetCreateDto;
 import com.shop.app.pet.dto.PetUpdateDto;
 import com.shop.app.pet.entity.Pet;
+import com.shop.app.product.dto.ProductReviewPetInfoDto;
 
 
 
@@ -46,18 +47,10 @@ public interface PetRepository {
     		+ "WHERE pet_id = #{petId}")
     int petUpdate(PetUpdateDto pet);
 
-    // 리뷰-펫 정보 가져오기(혜령)
-    @Select("select * from pet where member_id = #{memberId}")
-	List<Pet> findPetId(Pet pet, String memberId);
 
-    // 상품 상세페이지 - 리뷰 - 펫 정보 가져오기 (혜령) 
-    @Select("select * from pet where member_id = #{memberId}")
-	List<Pet> findProductRevicePet(String memberId);
-
-    @Select("SELECT p.pet_id, p.member_id, p.pet_name, p.pet_age, p.pet_kind, p.pet_breed, p.pet_weight, TO_CHAR(p.pet_adoption, 'YYYY-MM-DD') AS pet_adoption, p.pet_gender, p.pet_created_at " +
-            "FROM pet p " +
-            "WHERE p.member_id = #{reviewMemberId}")
-    List<Pet> findReviewPetByMemberId(String reviewMemberId);
+    // 상품 상세페이지 - 리뷰에 펫정보 가져오기(혜령)
+    @Select("select pet_name, pet_age, pet_breed, pet_weight, pet_gender from pet where member_id = #{reviewMemberId}")
+    List<ProductReviewPetInfoDto> findReviewPetByMemberId(String reviewMemberId);
 
 	
 

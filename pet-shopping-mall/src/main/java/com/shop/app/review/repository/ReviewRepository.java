@@ -64,6 +64,7 @@ public interface ReviewRepository {
 	@Update("update review set review_title = #{reviewTitle}, review_content = #{reviewContent}, review_star_rate = #{reviewStarRate} where review_id = #{reviewId}")
 	int updateReview(Review review);
 
+	// 리뷰삭제
 	@Select("select * from review where review_id = #{reviewId}")
 	ReviewDetails getDeleteReviewById(int reviewId);
 
@@ -78,13 +79,6 @@ public interface ReviewRepository {
 	// 상품 상세페이지 - 리뷰 상세조회 - 이미지 조회
 	ReviewDetails findProductImageAttachmentsByReviewId(int reviewId);
 
-	ReviewDetails findImageAttachmentsByReviewMemberId(int reviewId);
-
-	String findImageFilenameByReviewId(int reviewId2);
-
-	@Select("select * from review where review_id = #{reviewId}")
-	Review findPoductListReviewId(int reviewId);
-
 	// 상품 디테일 - 리뷰 전체개수 확인
 	@Select("select count (*) from review where product_id = #{productId}")
 	int findReviewTotalCount(int productId);
@@ -92,25 +86,9 @@ public interface ReviewRepository {
 	// 상품 - 리뷰 평점
 	ProductReviewAvgDto productReviewStarAvg(int productId);
 
-	@Select("select * from review where product_id = #{productId}")
-	List<ProductReviewAvgDto> findProductReviewAvgAll(int productId);
-
-	// 상품 리스트 - 리뷰 전체개수 확인
-	@Select("select count(*) from review where product_id = #{productId}")
-	int findProductListReviewTotalCount(int productId);
-
 	// 별점 퍼센트 구하기 위한 전체 리뷰
-	@Select("select * from review where product_id = #{productId}")
-	List<Review> findProductReviewAllNoPageBar(int productId);
-
-	ReviewDetails findProductImageAttachmentsByReviewId2(@Param("reviewId")int reviewId2, @Param("orderId")int orderId);
-//	ReviewDetails findProductImageAttachmentsByReviewId2(int reviewId2);
-
-	
-	
-	
-
-
+	@Select("select review_star_rate from review where product_id = #{productId}")
+	List<Review> findProductReviewAllStarPercent(int productId);
 
 
 }

@@ -19,6 +19,7 @@ import com.shop.app.review.entity.ReviewDetails;
 public interface ReviewService {
 
 	// 리뷰 작성
+	ReviewDetails createReview(ReviewCreateDto _review, List<ImageAttachment> attachments, Pet pet);
 	int insertReview(Review review);
 
 	// 리뷰 삭제
@@ -26,7 +27,6 @@ public interface ReviewService {
 
 	// 내가 쓴 리뷰 목록 조회
 	List<ReviewListDto> findReviewAll(Map<String, Object> params);
-	//	List<Review> findReviewAll(int reviewId);
 	
 	// 리뷰 상세조회
 	ReviewDetailDto findReviewId(int reviewId);
@@ -54,33 +54,14 @@ public interface ReviewService {
 	// 상품 상세페이지 - 리뷰 상세조회 - 이미지 조회
 	ReviewDetails findProductImageAttachmentsByReviewId(int reviewId);
 
-	// 상품 상세페이지 이미지 조회
-	ReviewDetails findImageAttachmentsByReviewMemberId(int reviewId);
-
-	String findImageFilenameByReviewId(int reviewId2);
-
-	Review findPoductListReviewId(int reviewId);
-
 	// 상품 - 리뷰 전체개수 확인
 	int findReviewTotalCount(int productId);
 
-//	Review productReviewStarAvg(int productId);
-
-//	List<ProductReviewAvgDto> findProductReviewAvgAll(int productId);
-
 	// 상품 - 리뷰 평균 별점
 	ProductReviewAvgDto productReviewStarAvg(int productId);
-
-	// 상품 상세 페이지 - 리뷰 전체개수 확인
-	int findProductListReviewTotalCount(int productId);
-   
+ 
 	// 별점 퍼센트 구하기 위한 전체 리뷰
-	List<Review> findProductReviewAllNoPageBar(int productId);
-
-	ReviewDetails findProductImageAttachmentsByReviewId2(int reviewId2, int orderId);
-//	ReviewDetails findProductImageAttachmentsByReviewId2(int reviewId2);
-
-	ReviewDetails createReview(@Valid ReviewCreateDto _review, List<ImageAttachment> attachments, Pet pet);
+	List<Review> findProductReviewAllStarPercent(int productId);
 
 	void deleteReviewAndRollbackPoints(int reviewId);
 
@@ -88,7 +69,6 @@ public interface ReviewService {
 
 
 
-//	List<ReviewDetailDto> findProductReviewDetails(List<Review> reviews);
 
 
 }

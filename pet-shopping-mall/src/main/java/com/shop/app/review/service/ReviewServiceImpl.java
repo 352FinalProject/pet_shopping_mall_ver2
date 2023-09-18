@@ -58,7 +58,10 @@ public class ReviewServiceImpl implements ReviewService {
 	private PointService pointService;
 	
 	
-	// 리뷰 추가 db저장
+	/**
+	 * @author 이혜령
+	 * 리뷰 CRUD
+	 */
 	@Override
 	public ReviewDetails createReview(ReviewCreateDto _review, List<ImageAttachment> attachments, Pet pet) {
 		
@@ -75,37 +78,32 @@ public class ReviewServiceImpl implements ReviewService {
 				.attachments(attachments)
 				.build();
 		
-		// 리뷰 작성자의 petId 연결하기
+		// 리뷰 작성자의 펫정보 연결
 		String memberId = _review.getReviewMemberId();
-		List<Pet> petInfo = petService.findPetsByMemberId(memberId); // 리뷰작성자의 펫정보 가져오기
-		
-		if (!petInfo.isEmpty()) { // 펫정보가 비어있지 않다면
-			Pet firstPet = petInfo.get(0); // 첫번째 Pet 객체 가져오기
-			reviews.setPetId(firstPet.getPetId()); // db에 pet정보 저장
+		List<Pet> petInfo = petService.findPetsByMemberId(memberId);
+	
+		// 가장 첫번째 펫정보를 등록
+		if (!petInfo.isEmpty()) { 
+			Pet firstPet = petInfo.get(0); 
+			reviews.setPetId(firstPet.getPetId()); 
 		} else {
 			reviews.setPetId(null);
 		}
 		return reviews;
 	}
 	
-	// 리뷰추가
 	@Override
 	public int insertReview(Review review) {
 		int result = 0;
-		// review 저장
 		result = reviewRepository.insertReview(review);
 		int refId = review.getReviewId();
 		
-		// attachment 저장
 		List<ImageAttachment> attachments = ((ReviewDetails) review).getAttachments();
 		if(attachments != null && !attachments.isEmpty()) {
 			for(ImageAttachment attach : attachments) {
 				
-				// 1. 이미지 파일 DB에 저장
 				int result2 = reviewRepository.insertAttachment(attach);
-				// 2. 이미지 파일 DB 저장 후 생성된 이미지 ID 가져오기
 				int imageId = attach.getImageId();
-				// 3. 리뷰 ID와 이미지 ID를 사용하여 매핑 정보를 DB에 저장
 				int reviewIdImageId = reviewRepository.insertMapping(refId, imageId);
 			}
 		}
@@ -118,13 +116,11 @@ public class ReviewServiceImpl implements ReviewService {
 		return result;
 	}
 
-	// 리뷰 삭제
 	@Override
 	public int reviewDelete(int reviewId) {
 		return reviewRepository.reviewDelete(reviewId);
 	}
 
-	// 내가 쓴 리뷰목록 조회
 	@Override
 	public List<ReviewListDto> findReviewAll(Map<String, Object> params) {
 		int limit = (int) params.get("limit");
@@ -135,13 +131,12 @@ public class ReviewServiceImpl implements ReviewService {
 		return reviewRepository.findReviewAll(reviewMemberId, rowBounds);
 	}
 
-	// 리뷰 전체 카운트
+	// 리뷰 페이징바
 	@Override
 	public int findTotalReviewCount(String reviewMemberId) {
 		return reviewRepository.findTotalReviewCount(reviewMemberId);
 	}
 
-	// 리뷰 상세조회
 	@Override
 	@Transactional
 	public ReviewDetailDto findReviewId(int reviewId) {
@@ -159,32 +154,28 @@ public class ReviewServiceImpl implements ReviewService {
 
 	    // 펫정보가 없는 경우
 	    if (petId != null ) {
-	    Pet pet = petRepository.findPetById(review.getPetId());
-	    reviewDetailDto.setPetId(pet.getPetId());
-	    reviewDetailDto.setPetName(pet.getPetName());
-	    reviewDetailDto.setPetAge(pet.getPetAge());
-	    reviewDetailDto.setPetBreed(pet.getPetBreed());
-	    reviewDetailDto.setPetWeight(pet.getPetWeight());
-	    reviewDetailDto.setPetGender(pet.getPetGender());
-	    
+		    Pet pet = petRepository.findPetById(review.getPetId());
+		    reviewDetailDto.setPetId(pet.getPetId());
+		    reviewDetailDto.setPetName(pet.getPetName());
+		    reviewDetailDto.setPetAge(pet.getPetAge());
+		    reviewDetailDto.setPetBreed(pet.getPetBreed());
+		    reviewDetailDto.setPetWeight(pet.getPetWeight());
+		    reviewDetailDto.setPetGender(pet.getPetGender());
 	    } 
 	    
 	    return reviewDetailDto;
 	}
 
-	// 리뷰 상세조회 - 이미지 조회
 	@Override
 	public ReviewDetails findImageAttachmentsByReviewId(int reviewId) {
 		return reviewRepository.findImageAttachmentsByReviewId(reviewId);
 	}
 	
-	// 리뷰 상세조회 - 상품조회
 	@Override
 	public ReviewProductDto findProductReviewId(int reviewId) {
 		return reviewRepository.findProductReviewId(reviewId);
 	}
 
-	// 리뷰 수정
 	@Override
 	public int updateReview(Review review) {
 		return reviewRepository.updateReview(review);
@@ -195,13 +186,16 @@ public class ReviewServiceImpl implements ReviewService {
 		return reviewRepository.getDeleteReviewById(reviewId);
 	}
 	
-	// 상품 상세페이지 리뷰 전체 카운트
+	
+	/**
+	 * @author 이혜령
+	 * 상품 상세페이지에서 리뷰 페이징바, 상세조회, 평균별점, 별점 선택비율(%)
+	 */
 	@Override
 	public int findProductTotalReviewCount(int productId) {
 		return reviewRepository.findProductTotalReviewCount(productId);
 	}
 
-	// 상품 상세페이지 전체 리뷰 
 	@Override
 	public List<Review> findProductReviewAll(Map<String, Object> params, int productId) {
 		int limit = (int) params.get("limit");
@@ -211,53 +205,24 @@ public class ReviewServiceImpl implements ReviewService {
 		return reviewRepository.findProductReviewAll(rowBounds, productId);
 	}
 
-	// 상품 상세페이지 - 리뷰 상세조회 - 이미지 조회
 	@Override
 	public ReviewDetails findProductImageAttachmentsByReviewId(int reviewId) {
 		return reviewRepository.findProductImageAttachmentsByReviewId(reviewId);
 	}
 
 	@Override
-	public ReviewDetails findImageAttachmentsByReviewMemberId(int reviewId) {
-		return reviewRepository.findImageAttachmentsByReviewMemberId(reviewId);
-	}
-
-	@Override
-	public String findImageFilenameByReviewId(int reviewId2) {
-		return reviewRepository.findImageFilenameByReviewId(reviewId2);
-	}
-
-	@Override
-	public Review findPoductListReviewId(int reviewId) {
-		return reviewRepository.findPoductListReviewId(reviewId);
-	}
-
-	// 상품 - 리뷰 전체개수 확인
-	@Override
 	public int findReviewTotalCount(int productId) {
 		return reviewRepository.findReviewTotalCount(productId);
 	}
 
-	// 상품 - 리뷰 평점
 	@Override
 	public ProductReviewAvgDto productReviewStarAvg(int productId) {
 		return reviewRepository.productReviewStarAvg(productId);
 	}
 
 	@Override
-	public int findProductListReviewTotalCount(int productId) {
-		return reviewRepository.findProductListReviewTotalCount(productId);
-	}
-
-	// 별점 퍼센트 구하기 위한 전체 리뷰
-	@Override
-	public List<Review> findProductReviewAllNoPageBar(int productId) {
-		return reviewRepository.findProductReviewAllNoPageBar(productId);
-	}
-
-	@Override
-	public ReviewDetails findProductImageAttachmentsByReviewId2(int reviewId2, int orderId) {
-		return reviewRepository.findProductImageAttachmentsByReviewId2(reviewId2, orderId);
+	public List<Review> findProductReviewAllStarPercent(int productId) {
+		return reviewRepository.findProductReviewAllStarPercent(productId);
 	}
 
 	

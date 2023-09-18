@@ -11,6 +11,7 @@ import com.shop.app.pet.dto.PetCreateDto;
 import com.shop.app.pet.dto.PetUpdateDto;
 import com.shop.app.pet.entity.Pet;
 import com.shop.app.pet.repository.PetRepository;
+import com.shop.app.product.dto.ProductReviewPetInfoDto;
 import com.shop.app.servicecenter.inquiry.entity.Question;
 import com.shop.app.servicecenter.inquiry.service.QuestionServiceImpl;
 
@@ -53,20 +54,9 @@ public class PetServiceImpl implements PetService {
 		return petRepository.petUpdate(pet);
 	}
 
-	// 리뷰-펫 정보 가져오기(혜령)
+	// 상품 상세페이지 - 리뷰에 펫정보 가져오기(혜령)
 	@Override
-	public List<Pet> findPetId(Pet pet, String memberId) {
-		return petRepository.findPetId(pet, memberId);
-	}
-
-	// 상품 상세페이지 - 리뷰 - 펫 정보 가져오기 (혜령) 
-	@Override
-	public List<Pet> findProductRevicePet(String memberId) {
-		return petRepository.findProductRevicePet(memberId);
-	}
-
-	@Override
-	public List<Pet> findReviewPetByMemberId(String reviewMemberId) {
+	public List<ProductReviewPetInfoDto> findReviewPetByMemberId(String reviewMemberId) {
 		return petRepository.findReviewPetByMemberId(reviewMemberId);
 	}
 
