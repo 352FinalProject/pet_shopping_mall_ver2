@@ -157,9 +157,9 @@ public class ProductController {
 		model.addAttribute("detailImages", detailImages); 
 		model.addAttribute("productDetails", productDetails); 
 
-		
 		// 상품 상세 페이지 리뷰 - 펫 정보 (예라, 성능개선)
 		Map<Integer, List<Pet>> reviewPetsMap = petService.findPetsMapByReviews(reviews);
+		log.debug("reviewPetsMap = {}", reviewPetsMap);
 		model.addAttribute("reviewPetsMap", reviewPetsMap); 
 
 		// 상품 상세 페이지 리뷰 - 이미지 파일 (이혜령)
@@ -179,15 +179,8 @@ public class ProductController {
 		}
 
 		model.addAttribute("reviewImageMap", reviewImageMap);
-
-		Map<Integer, List<OrderReviewListDto>> reviewProductMap = new HashMap<>();
-		for (Review review : reviews) {
-			List<OrderReviewListDto> ReviewOrders = orderService.findProductByReviewId(review.getReviewId(), productId);
-			reviewProductMap.put(review.getReviewId(), ReviewOrders);
-		}
-
 		model.addAttribute("reviewPetsMap", reviewPetsMap); 
-		model.addAttribute("reviewProductMap", reviewProductMap); 
+		
 		// 상품 상세 페이지 리뷰 - 리뷰 전체개수 확인 (이혜령)
 		int reveiwTotalCount = reviewService.findReviewTotalCount(productId);
 		model.addAttribute("reviewTotalCount", reveiwTotalCount);

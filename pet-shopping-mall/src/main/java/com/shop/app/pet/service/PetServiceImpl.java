@@ -78,18 +78,16 @@ public class PetServiceImpl implements PetService {
 	public Map<Integer, List<Pet>> findPetsMapByReviews(List<Review> reviews) {
 		
 		int productId = reviews.get(0).getProductId(); 
-		
 		List<ReviewDetailDto> results = petRepository.findReviewsAndPetsByProductId(productId);
-		
 		Map<Integer, List<Pet>> reviewPetsMap = new HashMap<>();
 		
 		for (ReviewDetailDto result : results) {
 	        int reviewId = result.getReviewId();
 	        Pet pet = result.toPet();
-	        log.debug("pet = {} ", pet);
-	     // map에 pet 정보 추가
+	        // map에 pet 정보 추가 (null이 아닐 경우)
+	        if (pet != null && pet.getPetName() != null) {
 	        reviewPetsMap.computeIfAbsent(reviewId, k -> new ArrayList<>()).add(pet);
-		
+	        }
 		}
 		return reviewPetsMap;
 		

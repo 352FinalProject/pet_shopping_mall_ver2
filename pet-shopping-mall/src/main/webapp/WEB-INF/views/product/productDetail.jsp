@@ -283,19 +283,19 @@
                         <div class="reivew-pet-box">
                            <!-- 펫정보 -->
                            <c:forEach items="${pets}" var="pet">
-                              <em class="review-pet-name">${pet.petName} &nbsp;
-                              <em class="review-em">|</em></em>
-                              <em class="review-pet-gender">${pet.petGender} &nbsp;
-                              <em class="review-em">|</em></em>
-                              <em class="review-pet-age">${pet.petAge}살 &nbsp;
-                              <em class="review-em">|</em></em>
-                              <em class="review-pet-weight">${pet.petWeight}kg &nbsp;
-                              <em class="review-em">|</em></em>
-                              <em class="review-pet-breed">${pet.petBreed}</em>
+	                              <em class="review-pet-name">${pet.petName} &nbsp;
+	                              <em class="review-em">|</em></em>
+	                              <em class="review-pet-gender">${pet.petGender} &nbsp;
+	                              <em class="review-em">|</em></em>
+	                              <em class="review-pet-age">${pet.petAge}살 &nbsp;
+	                              <em class="review-em">|</em></em>
+	                              <em class="review-pet-weight">${pet.petWeight}kg &nbsp;
+	                              <em class="review-em">|</em></em>
+	                              <em class="review-pet-breed">${pet.petBreed}</em>
                            </c:forEach>
                         </div>
                      </c:if>
-                     <c:if test="${empty pets}">
+					<c:if test="${empty pets}">
 	                      <em class="review-pet-name">펫 정보가 등록되지 않은 회원입니다.</em>
                      </c:if>
                      <!-- 리뷰 별점 -->
