@@ -90,9 +90,6 @@ public class ProductController {
 	@GetMapping("/productDetail.do")
 	public void productDetail(@RequestParam int productId, @RequestParam(defaultValue = "1") int page,
 			@AuthenticationPrincipal MemberDetails member, Model model) {
-
-		StopWatch stopWatch = new StopWatch();
-		stopWatch.start();
 		
 		int limit = 3;
 
@@ -205,11 +202,7 @@ public class ProductController {
 
 		if (member != null) {
 			model.addAttribute("likeState", wishlistService.getLikeProduct(productId, member.getMemberId()));
-		}
-		
-		stopWatch.stop();
-		System.out.println(stopWatch.prettyPrint());
-		System.out.println("리팩토링 시간 단축하기(s):" + stopWatch.getTotalTimeSeconds()); 
+		}	
 		
 	}
 
@@ -241,8 +234,6 @@ public class ProductController {
 		
 		List<ProductSearchDto> productInfos = productService.searchProductsById(params);
 		model.addAttribute("productInfos", productInfos);
-
-		
 		
 		String alignType = "";
 		String inOrder = "";
