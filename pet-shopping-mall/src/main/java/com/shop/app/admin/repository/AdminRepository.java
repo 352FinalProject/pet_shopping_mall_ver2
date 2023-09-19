@@ -23,7 +23,7 @@ public interface AdminRepository {
 	List<MemberDetails> adminSubscribeList();
 	
 	@Select("select * from member where name like '%' || #{searchKeyword} || '%' or member_id like '%' || #{searchKeyword} || '%'")
-	List<MemberDetails> adminMemberSearchByNameOrId(@Param("searchKeyword") String searchKeyword);
+	List<MemberDetails> adminMemberSearchByNameOrId(String searchKeyword);
 	
 	@Select("select * from member where (name like '%' || #{searchKeyword} || '%' or member_id like '%' || #{searchKeyword} || '%') and subscribe = 'Y'")
 	List<MemberDetails> adminSubscribeSearchByNameOrId(String searchKeyword);

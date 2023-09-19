@@ -216,7 +216,6 @@ public class ReviewController {
 
 		return "redirect:/review/reviewList.do";
 	}
-
 	/**
 	 * @author 이혜령
 	 * 리뷰 삭제

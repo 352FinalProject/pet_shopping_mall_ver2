@@ -128,7 +128,7 @@ public class NotificationServiceImpl implements NotificationService {
     * @author 김대원
     * 알림 조회
     */
-	@Override // db에서 알림 가져오기
+	@Override 
 	public List<Notification> findAllNotification(String memberId) {
 	    List<Notification> notifications = notificationRepository.findAllNotification(memberId);
 	    if (notifications == null) {
